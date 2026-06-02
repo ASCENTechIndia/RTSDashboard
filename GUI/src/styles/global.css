@@ -46,11 +46,11 @@ body {
 }
 
 /* ─────────────── Layout shell ─────────────── */
-.layout {
+/* .layout {
   display: grid;
   grid-template-columns: 160px 1fr;
   min-height: 100vh;
-}
+} */
 .main {
   display: flex;
   flex-direction: column;
@@ -791,6 +791,19 @@ body {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 8px;
+}
+
+/* Mobile responsive */
+@media (max-width: 1024px) {
+  .grid-table {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-table {
+    grid-template-columns: 1fr;
+  }
 }
 
 .table {

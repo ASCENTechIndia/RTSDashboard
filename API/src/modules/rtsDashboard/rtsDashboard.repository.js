@@ -136,18 +136,16 @@ async function repoDeptWiseApplications(ulbId) {
 }
 
 // TAT wise pending applications
-async function repoTatWisePending(ulbId=4) {
-  const sql = `SELECT * FROM vw_tatwise_pending WHERE num_application_ulbid = :ulbId`;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
+async function repoTatWisePending(ulbId) {
+  const sql = `SELECT * FROM vw_tatwise_pending`;
+  const result = await executeQuery(sql,{});
   return result.rows || [];
 }
 
 // Monthwise application trend
-async function repoMonthwiseApplicationTrend(ulbId=4) {
-  const sql = `SELECT * FROM vw_monthwiseapplication_trend WHERE num_application_ulbid = :ulbId`;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
+async function repoMonthwiseApplicationTrend(ulbId) {
+  const sql = `SELECT * FROM vw_monthwiseapplication_trend`;
+  const result = await executeQuery(sql,{});
   return result.rows || [];
 }
 

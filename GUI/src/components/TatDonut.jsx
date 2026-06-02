@@ -1,15 +1,44 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { tatDistribution } from "../data/dummyData";
+import apiClient from "../services/apiClient";
+
+const colors = [
+  "#22a06b",
+  "#f4b400",
+  "#ee8f1a",
+  "#e23b3b",
+  "#7c3aed"
+]
 
 export default function TatDonut() {
+
+  const [tatData, setTatData] = useState([]);
+  const [tatTotal, setTatTotal] = useState("");
+
   const fetchTATData = async () => {
     try {
-      // const 
+      const response = await apiClient.get(`/rts-dashboard/tatWisePending`);
+
+      if (response.success) {
+        const total = response.data.reduce((sum, row) => sum += Number(row.PENDING_APPLICATIONS || 0), 0)
+        const updatedData = response.data.map((item, idx) => ({
+          name: item?.DAYS_BUCKET,
+          value: item?.PENDING_APPLICATIONS,
+          color: colors[idx % colors.length],
+          pct: String(((item.PENDING_APPLICATIONS / total) * 100).toFixed(2)) + "%"
+        }));
+        setTatTotal(total);
+        setTatData(updatedData);
+      }
     } catch (error) {
       console.error(error);
     }
   }
+
+  useEffect(() => {
+    fetchTATData();
+  }, [])
 
   return (
     <div className="card">
@@ -19,7 +48,7 @@ export default function TatDonut() {
           <ResponsiveContainer>
             <PieChart>
               <Pie
-                data={tatDistribution}
+                data={tatData}
                 dataKey="value"
                 innerRadius={36}
                 outerRadius={60}
@@ -29,7 +58,7 @@ export default function TatDonut() {
                 labelLine={false}
                 isAnimationActive={false}
               >
-                {tatDistribution.map((d, i) => (
+                {tatData.map((d, i) => (
                   <Cell key={i} fill={d.color} />
                 ))}
               </Pie>
@@ -41,12 +70,12 @@ export default function TatDonut() {
               <div className="small" style={{ fontSize: "9px" }}>
                 एकूण प्रलंबित
               </div>
-              <div className="big">8,537</div>
+              <div className="big">{tatTotal}</div>
             </div>
           </div>
         </div>
         <div className="legend" style={{ marginLeft: "auto" }}>
-          {tatDistribution.map((d, i) => (
+          {tatData.map((d, i) => (
             <div className="item" key={i}>
               <div
                 className=""

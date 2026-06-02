@@ -20,7 +20,7 @@ import Footer from './components/Footer';
 export default function App() {
   return (
     <div className="layout">
-      <Sidebar />
+      {/* <Sidebar /> */}
       <main className="main">
         <Navbar />
         <div className="content">

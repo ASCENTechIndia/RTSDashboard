@@ -3,6 +3,14 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { tatDistribution } from "../data/dummyData";
 
 export default function TatDonut() {
+  const fetchTATData = async () => {
+    try {
+      // const 
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <div className="card">
       <h3 className="card-title">कालमर्यादा (TAT) नुसार प्रकरणे</h3>

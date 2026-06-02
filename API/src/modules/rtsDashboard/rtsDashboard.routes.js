@@ -10,8 +10,8 @@ const {
 const router = express.Router();
 
 router.get('/counts', getCounts);
-router.get('/deptWiseApplications', authRequired, getDeptWiseApplications);
-router.get('/tatWisePending', authRequired, getTatWisePending);
-router.get('/monthwiseApplicationTrend', authRequired, getMonthwiseApplicationTrend);
+router.get('/deptWiseApplications', getDeptWiseApplications);
+router.get('/tatWisePending', getTatWisePending);
+router.get('/monthwiseApplicationTrend', getMonthwiseApplicationTrend);
 
 module.exports = router;

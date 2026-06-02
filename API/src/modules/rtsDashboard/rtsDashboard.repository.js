@@ -149,9 +149,77 @@ async function repoMonthwiseApplicationTrend(ulbId) {
   return result.rows || [];
 }
 
+// Application Status Summary - Approved vs Pending
+async function repoApplicationStatusSummary(ulbId = 4) {
+  const sql = `
+    SELECT 
+      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
+      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL') THEN 1 END) AS pending_applications
+    FROM aorts_application_det a
+      INNER JOIN aorts_applicant_infodet infodet
+        ON infodet.var_appl_appno = a.var_application_appno
+        AND num_appl_serviceid = a.num_application_serviceid
+        AND infodet.num_appl_ulbid = a.num_application_ulbid
+      INNER JOIN aorts_service_def
+        ON num_service_serviceid = a.num_application_serviceid
+      LEFT JOIN aorts_service_config 
+        ON num_serv_servid = num_service_serviceid 
+        AND num_serv_deptid = num_service_deptid  
+        AND num_serv_ulbid = num_application_ulbid
+    WHERE a.num_application_ulbid = :ulbId
+  `;
+  const binds = { ulbId: Number(ulbId) };
+  const result = await executeQuery(sql, binds);
+  return result.rows?.[0] || {};
+}
+
+// Detailed Application Status Summary
+async function repoDetailedApplicationStatus(ulbId = 4) {
+  const sql = `
+    SELECT 
+      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
+      SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP') THEN 1 END) AS pending_applications,
+      SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END) AS reject_applications,
+      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL','CP','IP','VP','PP','CR','DN') THEN 1 END) AS others_applications
+    FROM aorts_application_det a
+      INNER JOIN aorts_applicant_infodet infodet
+        ON infodet.var_appl_appno = a.var_application_appno
+        AND num_appl_serviceid = a.num_application_serviceid
+        AND infodet.num_appl_ulbid = a.num_application_ulbid
+      INNER JOIN aorts_service_def
+        ON num_service_serviceid = a.num_application_serviceid
+      LEFT JOIN aorts_service_config 
+        ON num_serv_servid = num_service_serviceid 
+        AND num_serv_deptid = num_service_deptid  
+        AND num_serv_ulbid = num_application_ulbid
+    WHERE a.num_application_ulbid = :ulbId
+  `;
+  const binds = { ulbId: Number(ulbId) };
+  const result = await executeQuery(sql, binds);
+  return result.rows?.[0] || {};
+}
+
+// Top Services
+async function repoTopServices(ulbId) {
+  const sql = `SELECT * FROM vw_top_services`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
+// Service-wise Top Delay
+async function repoServicewiseTopDelay(ulbId) {
+  const sql = `SELECT * FROM vw_servicewisetop_delay`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
   repoTatWisePending,
-  repoMonthwiseApplicationTrend
+  repoMonthwiseApplicationTrend,
+  repoApplicationStatusSummary,
+  repoDetailedApplicationStatus,
+  repoTopServices,
+  repoServicewiseTopDelay
 };

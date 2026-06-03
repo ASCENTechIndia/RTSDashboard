@@ -1,6 +1,5 @@
 const express = require('express');
 const authRoutes = require('../modules/auth/auth.routes');
-const authComplaintRoutes = require('../modules/authComplaint/authComplaint.routes');
 
 const router = express.Router();
 
@@ -13,9 +12,7 @@ router.get('/ready', (req, res) => {
 });
 
 router.use('/auth', authRoutes);
-router.use('/authComplaint', authComplaintRoutes);
-router.use('/registerComplaint',require('../modules/registerComplaint/registerComplaint.routes'));
-router.use('/authComplaint', require('../modules/authComplaint/authComplaint.routes'));
 router.use('/rts-dashboard', require('../modules/rtsDashboard/rtsDashboard.routes'));
+router.use('/dropdowns', require('../modules/dropdowns/dropdowns.routes'));
 
 module.exports = router;

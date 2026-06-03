@@ -7,7 +7,8 @@ const {
   serviceDetailedApplicationStatus,
   serviceTopServices,
   serviceServicewiseTopDelay,
-  servicePrabhagwiseApplications, serviceCommissionerSummary
+  servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts,
+  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -218,6 +219,83 @@ async function getCommissionerSummary(req, res, next) {
   }
 }
 
+async function getAlerts(req, res, next) {
+   try {
+    const ulbId = req.query.ulbId || req.user?.ulbId;
+    const rows = await serviceAlerts(ulbId);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Alerts fetched');
+    auditLog({
+      action: 'ALERTS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId, count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Alerts error');
+    return next(error);
+  }
+}
+
+async function getComplaintStatus(req, res, next) {
+  try {
+    const rows = await serviceComplaintStatus();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Complaint status fetched');
+    auditLog({
+      action: 'COMPLAINT_STATUS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Complaint status error');
+    return next(error);
+  }
+}
+
+async function getRTSComplaints(req, res, next) {
+  try {
+    const rows = await serviceRTSComplaints();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'RTS Complaints fetched');
+    auditLog({
+      action: 'RTS_COMPLAINTS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'RTS Complaints error');
+    return next(error);
+  }
+}
+
+async function getOfficerWork(req, res, next) {
+  try {
+    const rows = await serviceOfficerWork();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Officer work fetched');
+    auditLog({
+      action: 'OFFICER_WORK',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Officer Work error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
@@ -227,5 +305,6 @@ module.exports = {
   getDetailedApplicationStatus,
   getTopServices,
   getServicewiseTopDelay,
-  getPrabhagwiseApplications, getCommissionerSummary
+  getPrabhagwiseApplications, getCommissionerSummary, getAlerts,
+  getComplaintStatus, getRTSComplaints, getOfficerWork
 };

@@ -37,21 +37,20 @@ async function repoCounts(ulbId=4) {
 
   // Delayed applications
   const delayedSql = `
-    SELECT COUNT(a.var_application_appno) AS delayed_applications
+    select count(a.var_application_appno) delayed_applications
     FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def
-      ON num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config
-      ON num_serv_servid = num_service_serviceid
-      AND num_serv_deptid = num_service_deptid
-      AND num_serv_ulbid = num_application_ulbid
-    WHERE TRUNC(SYSDATE) - TRUNC(dat_application_recieptdate) > num_service_maxdays
-    AND var_application_status IN ('CP','IP','VP','PP') 
-    AND a.num_application_ulbid = :ulbId
+         INNER JOIN aorts_applicant_infodet infodet
+             ON     infodet.var_appl_appno = a.var_application_appno
+                AND num_appl_serviceid = a.num_application_serviceid
+                AND infodet.num_appl_ulbid = a.num_application_ulbid
+         INNER JOIN aorts_service_def
+             ON num_service_serviceid = a.num_application_serviceid
+          left join  aorts_service_config 
+          on num_serv_servid=num_service_serviceid 
+          and num_serv_deptid=num_service_deptid  
+          and num_serv_ulbid=num_application_ulbid
+where trunc(sysdate)-trunc(a.dat_application_insdate)>num_service_maxdays
+and var_application_status in ('CP','IP','VP','PP') and a.num_application_ulbid = :ulbId
   `;
 
   // Approved percentage
@@ -68,7 +67,7 @@ async function repoCounts(ulbId=4) {
       ON num_serv_servid = num_service_serviceid
       AND num_serv_deptid = num_service_deptid
       AND num_serv_ulbid = num_application_ulbid
-    WHERE TRUNC(SYSDATE) - TRUNC(dat_application_recieptdate) <= num_service_maxdays
+    WHERE TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= num_service_maxdays
     AND a.num_application_ulbid = :ulbId
   `;
 
@@ -130,25 +129,86 @@ async function repoCounts(ulbId=4) {
 
 // Deptwise applications view
 async function repoDeptWiseApplications(ulbId) {
-  const sql = `SELECT * FROM vw_deptwise_applications WHERE num_application_ulbid = :ulbId`;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
+  const sql = `SELECT * FROM vw_deptwise_applications`;
+  const result = await executeQuery(sql,{});
   return result.rows || [];
 }
 
 // TAT wise pending applications
 async function repoTatWisePending(ulbId) {
-  const sql = `SELECT * FROM vw_tatwise_pending WHERE num_application_ulbid = :ulbId`;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
+  const sql = `SELECT * FROM vw_tatwise_pending`;
+  const result = await executeQuery(sql,{});
   return result.rows || [];
 }
 
 // Monthwise application trend
 async function repoMonthwiseApplicationTrend(ulbId) {
-  const sql = `SELECT * FROM vw_monthwiseapplication_trend WHERE num_application_ulbid = :ulbId`;
+  const sql = `SELECT * FROM vw_monthwiseapplication_trend`;
+  const result = await executeQuery(sql,{});
+  return result.rows || [];
+}
+
+// Application Status Summary - Approved vs Pending
+async function repoApplicationStatusSummary(ulbId = 4) {
+  const sql = `
+    SELECT 
+      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
+      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL') THEN 1 END) AS pending_applications
+    FROM aorts_application_det a
+      INNER JOIN aorts_applicant_infodet infodet
+        ON infodet.var_appl_appno = a.var_application_appno
+        AND num_appl_serviceid = a.num_application_serviceid
+        AND infodet.num_appl_ulbid = a.num_application_ulbid
+      INNER JOIN aorts_service_def
+        ON num_service_serviceid = a.num_application_serviceid
+      LEFT JOIN aorts_service_config 
+        ON num_serv_servid = num_service_serviceid 
+        AND num_serv_deptid = num_service_deptid  
+        AND num_serv_ulbid = num_application_ulbid
+    WHERE a.num_application_ulbid = :ulbId
+  `;
   const binds = { ulbId: Number(ulbId) };
   const result = await executeQuery(sql, binds);
+  return result.rows?.[0] || {};
+}
+
+// Detailed Application Status Summary
+async function repoDetailedApplicationStatus(ulbId = 4) {
+  const sql = `
+    SELECT 
+      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
+      SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP') THEN 1 END) AS pending_applications,
+      SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END) AS reject_applications,
+      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL','CP','IP','VP','PP','CR','DN') THEN 1 END) AS others_applications
+    FROM aorts_application_det a
+      INNER JOIN aorts_applicant_infodet infodet
+        ON infodet.var_appl_appno = a.var_application_appno
+        AND num_appl_serviceid = a.num_application_serviceid
+        AND infodet.num_appl_ulbid = a.num_application_ulbid
+      INNER JOIN aorts_service_def
+        ON num_service_serviceid = a.num_application_serviceid
+      LEFT JOIN aorts_service_config 
+        ON num_serv_servid = num_service_serviceid 
+        AND num_serv_deptid = num_service_deptid  
+        AND num_serv_ulbid = num_application_ulbid
+    WHERE a.num_application_ulbid = :ulbId
+  `;
+  const binds = { ulbId: Number(ulbId) };
+  const result = await executeQuery(sql, binds);
+  return result.rows?.[0] || {};
+}
+
+// Top Services
+async function repoTopServices(ulbId) {
+  const sql = `SELECT * FROM vw_top_services`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
+// Service-wise Top Delay
+async function repoServicewiseTopDelay(ulbId) {
+  const sql = `SELECT * FROM vw_servicewisetop_delay`;
+  const result = await executeQuery(sql, {});
   return result.rows || [];
 }
 
@@ -156,5 +216,9 @@ module.exports = {
   repoCounts,
   repoDeptWiseApplications,
   repoTatWisePending,
-  repoMonthwiseApplicationTrend
+  repoMonthwiseApplicationTrend,
+  repoApplicationStatusSummary,
+  repoDetailedApplicationStatus,
+  repoTopServices,
+  repoServicewiseTopDelay
 };

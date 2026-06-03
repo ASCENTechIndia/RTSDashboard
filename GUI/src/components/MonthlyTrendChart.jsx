@@ -1,14 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monthlyTrend } from '../data/dummyData';
+import apiClient from '../services/apiClient';
 
 export default function MonthlyTrendChart() {
+  const [monthlyTrendChartData, setMonthlyTrendChartData] = useState([]);
+
+  const fetchTrendChartData = async () => {
+    try {
+      const response = await apiClient.get(`/rts-dashboard/monthwiseApplicationTrend`);
+
+      if (response.success && response.data.length > 0) {
+        const updatedChartData = response.data.map(item => ({
+          month: item.MONTHS,
+          received: item.RECEIVED_APPLICATIONS || 0,
+          disposed: item.APPROVED_APPLICATIONS || 0
+        }));
+        setMonthlyTrendChartData(updatedChartData);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    fetchTrendChartData();
+  }, [])
+
   return (
     <div className="card">
       <h3 className="card-title">मासिक अर्ज ट्रेंड</h3>
       <div style={{ flex: 1 }}>
         <ResponsiveContainer>
-          <LineChart data={monthlyTrend} margin={{ top: 5, right: 8, left: -10, bottom: 0 }}>
+          <LineChart data={monthlyTrendChartData} margin={{ top: 5, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eef0f4" />
             <XAxis dataKey="month" tick={{ fontSize: 9, fill: '#6b7280' }} interval={0} angle={-25} textAnchor="end" height={45} />
             <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} />

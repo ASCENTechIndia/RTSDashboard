@@ -4,14 +4,22 @@ const {
   getCounts,
   getDeptWiseApplications,
   getTatWisePending,
-  getMonthwiseApplicationTrend
+  getMonthwiseApplicationTrend,
+  getApplicationStatusSummary,
+  getDetailedApplicationStatus,
+  getTopServices,
+  getServicewiseTopDelay
 } = require('./rtsDashboard.controller');
 
 const router = express.Router();
 
 router.get('/counts', getCounts);
-router.get('/deptWiseApplications', authRequired, getDeptWiseApplications);
-router.get('/tatWisePending', authRequired, getTatWisePending);
-router.get('/monthwiseApplicationTrend', authRequired, getMonthwiseApplicationTrend);
+router.get('/deptWiseApplications', getDeptWiseApplications);
+router.get('/tatWisePending', getTatWisePending);
+router.get('/monthwiseApplicationTrend', getMonthwiseApplicationTrend);
+router.get('/applicationStatusSummary', getApplicationStatusSummary);
+router.get('/detailedApplicationStatus', getDetailedApplicationStatus);
+router.get('/topServices', getTopServices);
+router.get('/servicewiseTopDelay', getServicewiseTopDelay);
 
 module.exports = router;

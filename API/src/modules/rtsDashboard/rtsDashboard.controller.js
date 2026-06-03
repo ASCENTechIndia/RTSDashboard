@@ -2,7 +2,11 @@ const {
   serviceCounts,
   serviceDeptWiseApplications,
   serviceTatWisePending,
-  serviceMonthwiseApplicationTrend
+  serviceMonthwiseApplicationTrend,
+  serviceApplicationStatusSummary,
+  serviceDetailedApplicationStatus,
+  serviceTopServices,
+  serviceServicewiseTopDelay
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -95,9 +99,93 @@ async function getMonthwiseApplicationTrend(req, res, next) {
   }
 }
 
+async function getApplicationStatusSummary(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || req.user?.ulbId;
+    const data = await serviceApplicationStatusSummary(ulbId);
+    logApiSuccess(req, 200, data, 'Application Status Summary Report completed');
+    auditLog({
+      action: 'APPLICATION_STATUS_SUMMARY',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Application Status Summary Report error');
+    return next(error);
+  }
+}
+
+async function getDetailedApplicationStatus(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || req.user?.ulbId;
+    const data = await serviceDetailedApplicationStatus(ulbId);
+    logApiSuccess(req, 200, data, 'Detailed Application Status Report completed');
+    auditLog({
+      action: 'DETAILED_APPLICATION_STATUS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Detailed Application Status Report error');
+    return next(error);
+  }
+}
+
+async function getTopServices(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || req.user?.ulbId;
+    const rows = await serviceTopServices(ulbId);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Top Services Report completed');
+    auditLog({
+      action: 'TOP_SERVICES',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId, count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Top Services Report error');
+    return next(error);
+  }
+}
+
+async function getServicewiseTopDelay(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || req.user?.ulbId;
+    const rows = await serviceServicewiseTopDelay(ulbId);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Service-wise Top Delay Report completed');
+    auditLog({
+      action: 'SERVICEWISE_TOP_DELAY',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId, count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Service-wise Top Delay Report error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
   getTatWisePending,
-  getMonthwiseApplicationTrend
+  getMonthwiseApplicationTrend,
+  getApplicationStatusSummary,
+  getDetailedApplicationStatus,
+  getTopServices,
+  getServicewiseTopDelay
 };

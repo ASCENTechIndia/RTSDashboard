@@ -3,7 +3,7 @@ import React from 'react';
 export default function Footer() {
   return (
     <div className="footer">
-      <span>नागरिक सेवा हक्क आमचे ध्येय</span>
+      <span>नागरिक सेवा हेच आमचे ध्येय</span>
       <span className="sep">|</span>
       <span>पारदर्शकता</span>
       <span className="sep">|</span>

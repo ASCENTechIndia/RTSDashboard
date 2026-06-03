@@ -425,8 +425,9 @@ body {
 .table th.num {
   text-align: center;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  white-space: wrap;
 }
+
 .table .total-row td {
   font-weight: 700;
   background: #f6f8fc;

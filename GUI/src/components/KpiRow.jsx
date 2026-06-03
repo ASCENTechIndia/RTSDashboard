@@ -38,9 +38,9 @@ export default function KpiRow() {
           { id: 'pending', icon: 'clock', label: 'प्रलंबित अर्ज', value: `${response?.data?.pending_applications || 0}`, color: '#ee8f1a' },
           { id: 'delayed', icon: 'alert', label: 'विलंबित प्रकरणे', value: `${response?.data?.delayed_applications || 0}`, color: '#e23b3b' },
           { id: 'ontime', icon: 'target', label: 'वेळेत निकाली (%)', value: `${response?.data?.approved_percentage || 0}%`, color: '#16a34a' },
-          { id: 'e6', icon: 'badge', label: 'अप्रा प्राप्त अर्ज', value: `${response?.data?.todays_applications || 0}`, color: '#f0a020' },
-          { id: 'e7', icon: 'file', label: 'अपील प्रकरणे', value: `${response?.data?.todays_approved || 0}`, color: '#7c3aed' },
-          { id: 'rts', icon: 'gear', label: 'RTS नोंदणी', value: '0', color: '#0ea5a5' }
+          { id: 'e6', icon: 'badge', label: 'आज प्राप्त अर्ज', value: `${response?.data?.todays_applications || 0}`, color: '#f0a020' },
+          { id: 'e7', icon: 'file', label: 'आज निकाली अर्ज', value: `${response?.data?.todays_approved || 0}`, color: '#7c3aed' },
+          { id: 'rts', icon: 'gear', label: 'RTS तक्रारी', value: '0', color: '#0ea5a5' }
         ]
 
         setKpiCards(updatedCards);

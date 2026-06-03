@@ -231,6 +231,13 @@ ORDER BY (approved_applications + pending_applications) DESC`;
   return result.rows || [];
 }
 
+async function repoCommissionerSummary() {
+  const sql = `select * from vw_commissioner_summary`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
@@ -239,5 +246,5 @@ module.exports = {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay, repoPrabhagwiseApplications
+  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary
 };

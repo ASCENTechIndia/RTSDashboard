@@ -1,4 +1,13 @@
-const {} = require('./dropdowns.repo');
+const {repoStatusDropdown} = require('./dropdowns.repo');
 
 
-module.exports = {}
+
+
+
+async function serviceStatusDropdown(ulbId) {
+  return repoStatusDropdown(ulbId);
+}
+
+
+
+module.exports = {serviceStatusDropdown}

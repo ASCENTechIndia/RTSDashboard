@@ -1,6 +1,39 @@
-const {} = require('./dropdowns.service');
+const {serviceStatusDropdown} = require('./dropdowns.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
+function requestMeta(req) {
+  return {
+    ip: req.ip,
+    method: req.method,
+    path: req.originalUrl,
+  };
+}
 
-module.exports = {}
+
+
+
+
+
+
+async function getStatusDropdown(req, res, next) {
+  try {
+     const ulbId = req.query.ulbId || req.user?.ulbId;
+    const data = await serviceStatusDropdown(ulbId);
+     logApiSuccess(req, 200, data, 'Status Dropdown completed');
+       auditLog({
+         action: 'STATUS_DROPDOWN',
+         actor: req.user?.userId || 'system',
+         module: 'rtsDashboard',
+         status: 'SUCCESS',
+         details: { ulbId },
+         requestMeta: requestMeta(req),
+       });
+       return res.ok(data);
+     } catch (error) {
+       logApiError(req, 500, error.message, 'Status Dropdown error');
+       return next(error);
+     }
+   }
+
+module.exports = {getStatusDropdown}

@@ -212,6 +212,25 @@ async function repoServicewiseTopDelay(ulbId) {
   return result.rows || [];
 }
 
+async function repoPrabhagwiseApplications() {
+  const sql = `SELECT wardname,
+    (approved_applications + pending_applications) AS total_applications,
+    approved_applications,
+    pending_applications,
+    NVL(
+        ROUND(
+            approved_applications * 100 /
+            NULLIF(approved_applications + pending_applications, 0),
+            2
+        ),
+        0
+    ) AS approved_percentage
+FROM aorts.vw_prabhagwise_applications
+ORDER BY (approved_applications + pending_applications) DESC`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
@@ -220,5 +239,5 @@ module.exports = {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay
+  repoServicewiseTopDelay, repoPrabhagwiseApplications
 };

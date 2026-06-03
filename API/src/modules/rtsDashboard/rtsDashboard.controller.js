@@ -6,7 +6,8 @@ const {
   serviceApplicationStatusSummary,
   serviceDetailedApplicationStatus,
   serviceTopServices,
-  serviceServicewiseTopDelay
+  serviceServicewiseTopDelay,
+  servicePrabhagwiseApplications
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -179,6 +180,25 @@ async function getServicewiseTopDelay(req, res, next) {
   }
 }
 
+async function getPrabhagwiseApplications(req, res, next) {
+  try {
+    const rows = await servicePrabhagwiseApplications();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications completed');
+    auditLog({
+      action: 'PRABHAGWISE_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: {  count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Prabhagwise applications error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
@@ -187,5 +207,6 @@ module.exports = {
   getApplicationStatusSummary,
   getDetailedApplicationStatus,
   getTopServices,
-  getServicewiseTopDelay
+  getServicewiseTopDelay,
+  getPrabhagwiseApplications
 };

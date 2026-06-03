@@ -98,10 +98,59 @@ async function repoDeptWiseApplications(ulbId) {
 }
 
 // TAT wise pending applications
-async function repoTatWisePending(ulbId) {
-  const sql = `SELECT * FROM vw_tatwise_pending`;
-  const result = await executeQuery(sql, {});
-  return result.rows || [];
+async function repoTatWisePending(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `SELECT
+    days_bucket,
+    SUM(pending_applications) AS pending_count,
+    ROUND(
+        SUM(pending_applications) * 100 /
+        SUM(SUM(pending_applications)) OVER (),
+        2
+    ) AS percentage
+FROM vw_tatwise_pending
+WHERE 1 = 1
+  AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+  AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+  AND (:serviceName IS NULL OR servnm = :serviceName)
+  AND (:wardName IS NULL OR prabhag_nm = :wardName)
+  AND (:officerName IS NULL OR officer_name = :officerName)
+  AND (:status IS NULL OR status = :status)
+GROUP BY days_bucket
+ORDER BY
+  CASE days_bucket
+    WHEN '0 - 3' THEN 1
+    WHEN '4 - 7' THEN 2
+    WHEN '8 - 15' THEN 3
+    WHEN '15+' THEN 4
+  END`;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const result = await executeQuery(sql, binds);
+
+  const totalPending = result.rows.reduce(
+    (sum, row) => sum + Number(row.PENDING_COUNT || 0),
+    0
+  );
+
+  return {
+    totalPending,
+    buckets: result.rows,
+  };
 }
 
 // Monthwise application trend

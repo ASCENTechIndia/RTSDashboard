@@ -27,8 +27,14 @@ async function serviceDeptWiseApplications(ulbId) {
   return repoDeptWiseApplications(ulbId);
 }
 
-async function serviceTatWisePending(ulbId) {
-  return repoTatWisePending(ulbId);
+async function serviceTatWisePending( filters = {}) {
+  return repoTatWisePending( filters.fromDate,
+    filters.toDate,
+    filters.deptName,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status);
 }
 
 async function serviceMonthwiseApplicationTrend(ulbId) {

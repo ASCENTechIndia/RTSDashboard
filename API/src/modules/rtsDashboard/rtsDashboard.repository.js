@@ -231,6 +231,58 @@ ORDER BY (approved_applications + pending_applications) DESC`;
   return result.rows || [];
 }
 
+async function repoCommissionerSummary() {
+  const sql = `select * from vw_commissioner_summary`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
+async function repoAlerts(ulbId) {
+  const pendingSql = `
+    SELECT
+      CASE
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 15
+          THEN '4-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15
+          THEN '15+ days'
+      END AS days_bucket,
+      COUNT(a.var_application_appno) AS pending_applications
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+     AND infodet.num_appl_serviceid = a.num_application_serviceid
+     AND infodet.num_appl_ulbid = a.num_application_ulbid
+    WHERE a.var_application_status IN ('CP', 'IP', 'VP', 'PP')
+      AND a.num_application_ulbid = :ulbId
+      AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) >= 4
+    GROUP BY
+      CASE
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 15
+          THEN '4-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15
+          THEN '15+ days'
+      END
+  `;
+
+  const approvedSql = `
+    SELECT COUNT(var_application_appno) AS approved_applications
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+     AND infodet.num_appl_serviceid = a.num_application_serviceid
+     AND infodet.num_appl_ulbid = a.num_application_ulbid
+    WHERE var_application_status IN ('NW','AP','DL')
+      AND a.num_application_ulbid = :ulbId
+  `;
+  const pendingResult = await executeQuery(pendingSql, { ulbId });
+  const approvedResult = await executeQuery(approvedSql, { ulbId });
+  return {
+    pendingBuckets: pendingResult.rows || [],
+    approvedApplications:
+      approvedResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
+  };
+}
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
@@ -239,5 +291,5 @@ module.exports = {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay, repoPrabhagwiseApplications
+  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts
 };

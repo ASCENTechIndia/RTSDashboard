@@ -13,7 +13,7 @@ const data = [
     type: "warn",
     Icon: Clock,
     title: "कालमर्यादा संपत आलेले (4-15 दिवस)",
-    subtitle: "लवकर कारवाही अपेक्षित",
+    subtitle: "लवकर कार्यवाही अपेक्षित",
     value: "3,143",
   },
   {

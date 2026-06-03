@@ -11,14 +11,14 @@ export default function Navbar() {
         <div className="pill">
           <span className="pill-icon">📅</span>
           <div className="pill-body">
-            <span className="pill-label">एकूण दि व वेळ</span>
+            <span className="pill-label">दिनांक व वेळ</span>
             <span className="pill-value">25 मे 2025 <span className="sub">11:30 AM</span></span>
           </div>
         </div>
         <div className="pill">
           <span className="pill-icon">📅</span>
           <div className="pill-body">
-            <span className="pill-label">अहवाल वर्ष</span>
+            <span className="pill-label">आर्थिक वर्ष</span>
             <span className="pill-value">2024-25</span>
           </div>
         </div>

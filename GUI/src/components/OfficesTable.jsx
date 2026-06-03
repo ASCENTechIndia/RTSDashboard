@@ -5,7 +5,7 @@ export default function OfficesTable() {
   return (
     <div className="card">
       <h3 className="card-title">
-        कार्यालयनिहाय कामगिरी (Top 10)
+        अधिकारी कामगिरी (Top 10)
         <span className="view">View All Officers ›</span>
       </h3>
       <table className="table">
@@ -18,11 +18,11 @@ export default function OfficesTable() {
         </colgroup>
         <thead>
           <tr>
-            <th>कार्यालय</th>
-            <th className="num">प्राप्त</th>
+            <th>अधिकारी नाव</th>
+            <th className="num">नियुक्त</th>
             <th className="num">निकाली</th>
             <th className="num">प्रलंबित</th>
-            <th className="num">वेळेत (%)</th>
+            <th className="num">विलंबित</th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@ export default function OfficesTable() {
               <td className="num">{r.received.toLocaleString('en-IN')}</td>
               <td className="num">{r.disposed.toLocaleString('en-IN')}</td>
               <td className="num">{r.pending.toLocaleString('en-IN')}</td>
-              <td className="num" style={{ color: '#16a34a', fontWeight: 600 }}>{r.ontime}%</td>
+              <td className="num" style={{ color: '#16a34a', fontWeight: 600 }}>{r.ontime}</td>
             </tr>
           ))}
         </tbody>

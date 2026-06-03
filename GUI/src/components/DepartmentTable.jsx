@@ -122,7 +122,7 @@ export default function DepartmentTable() {
                 प्रलंबित
               </th>
               <th className="num" style={{ textAlign: "center" }}>
-                वेळेत (%)
+                वेळेत निकाली (%)
               </th>
             </tr>
           </thead>

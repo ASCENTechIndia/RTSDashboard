@@ -48,10 +48,10 @@ export default function WardsTable() {
           <thead>
             <tr>
               <th>प्रभाग</th>
-              <th className="num">प्राप्त</th>
+              <th className="num">प्राप्त अर्ज</th>
               <th className="num">निकाली</th>
               <th className="num">प्रलंबित</th>
-              <th className="num">वेळेत (%)</th>
+              <th className="num">वेळेत निकाली (%)</th>
             </tr>
           </thead>
           <tbody>

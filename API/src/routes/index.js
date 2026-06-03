@@ -13,5 +13,6 @@ router.get('/ready', (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/rts-dashboard', require('../modules/rtsDashboard/rtsDashboard.routes'));
+router.use('/dropdowns', require('../modules/dropdowns/dropdowns.routes'));
 
 module.exports = router;

@@ -1,150 +1,113 @@
-const { executeQuery } = require('../../db/queryExecutor');
+const { executeQuery } = require("../../db/queryExecutor");
 
 // Counts endpoint queries
-async function repoCounts(ulbId=4) {
-  const queries = [];
+async function repoCounts(
+  ulbId = 4,
+  fromDate,
+  toDate,
+  deptName,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const commonFilters = `
+AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+AND (:serviceName IS NULL OR servnm = :serviceName)
+AND (:wardName IS NULL OR prabhag_nm = :wardName)
+AND (:officerName IS NULL OR officer_name = :officerName)
+AND (:status IS NULL OR status = :status)
+`;
 
-  // Total applications
-  const totalAppSql = `
-    SELECT COUNT(var_application_appno) AS total_applications 
-    FROM aorts_application_det 
-    WHERE num_application_ulbid = :ulbId
+  const buildViewQuery = (viewName, columnName) => `
+     SELECT COUNT(*) AS CNT
+    FROM ${viewName}
+    WHERE 1 = 1
+    ${commonFilters}
   `;
 
-  // Total approved
-  const approvedSql = `
-    SELECT COUNT(var_application_appno) AS approved_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    WHERE var_application_status IN ('NW','AP','DL') 
-    AND a.num_application_ulbid = :ulbId
-  `;
+  const totalAppSql = buildViewQuery(
+    "vw_total_applications",
+    "total_applications"
+  );
 
-  // Total pending
-  const pendingSql = `
-    SELECT COUNT(var_application_appno) AS pending_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    WHERE var_application_status IN ('CP','IP','VP','PP') 
-    AND a.num_application_ulbid = :ulbId
-  `;
+  const approvedSql = buildViewQuery(
+    "approved_applications",
+    "approved_applications"
+  );
 
-  // Delayed applications
-  const delayedSql = `
-    select count(a.var_application_appno) delayed_applications
-    FROM aorts_application_det a
-         INNER JOIN aorts_applicant_infodet infodet
-             ON     infodet.var_appl_appno = a.var_application_appno
-                AND num_appl_serviceid = a.num_application_serviceid
-                AND infodet.num_appl_ulbid = a.num_application_ulbid
-         INNER JOIN aorts_service_def
-             ON num_service_serviceid = a.num_application_serviceid
-          left join  aorts_service_config 
-          on num_serv_servid=num_service_serviceid 
-          and num_serv_deptid=num_service_deptid  
-          and num_serv_ulbid=num_application_ulbid
-where trunc(sysdate)-trunc(a.dat_application_insdate)>num_service_maxdays
-and var_application_status in ('CP','IP','VP','PP') and a.num_application_ulbid = :ulbId
-  `;
+  const pendingSql = buildViewQuery(
+    "vw_pending_applications",
+    "pending_applications"
+  );
 
-  // Approved percentage
-  const approvedPercentageSql = `
-    SELECT ROUND(SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 END) * 100.0 / COUNT(a.var_application_appno), 2) AS approved_percentage
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def
-      ON num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config
-      ON num_serv_servid = num_service_serviceid
-      AND num_serv_deptid = num_service_deptid
-      AND num_serv_ulbid = num_application_ulbid
-    WHERE TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= num_service_maxdays
-    AND a.num_application_ulbid = :ulbId
-  `;
+  const delayedSql = buildViewQuery(
+    "vw_delayed_applications",
+    "delayed_applications"
+  );
 
-  // Today's applications
-  const todayAppSql = `
-    SELECT COUNT(var_application_appno) AS todays_applications
-    FROM aorts_application_det
-    WHERE num_application_ulbid = :ulbId 
-    AND TRUNC(dat_application_insdate) = TRUNC(SYSDATE)
-  `;
+  const approvedPercentageSql = buildViewQuery(
+    "vw_withintime_perc",
+    "approved_percentage"
+  );
 
-  // Today's approved
-  const todayApprovedSql = `
-    SELECT COUNT(var_application_appno) AS todays_approved
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    WHERE var_application_status IN ('NW','AP','DL') 
-    AND a.num_application_ulbid = :ulbId
-    AND TRUNC(a.dat_application_insdate) = TRUNC(SYSDATE)
-  `;
+  const todayAppSql = buildViewQuery(
+    "vw_todays_applications",
+    "todays_applications" );
 
-  const binds = { ulbId: Number(ulbId) };
+  const todayApprovedSql = buildViewQuery(
+    "vw_todays_approved",
+    "todays_approved" );
 
-  try {
-    const [
-      totalAppResult,
-      approvedResult,
-      pendingResult,
-      delayedResult,
-      approvedPercentageResult,
-      todayAppResult,
-      todayApprovedResult
-    ] = await Promise.all([
-      executeQuery(totalAppSql, binds),
-      executeQuery(approvedSql, binds),
-      executeQuery(pendingSql, binds),
-      executeQuery(delayedSql, binds),
-      executeQuery(approvedPercentageSql, binds),
-      executeQuery(todayAppSql, binds),
-      executeQuery(todayApprovedSql, binds)
-    ]);
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
 
-    return {
-      total_applications: totalAppResult.rows?.[0]?.TOTAL_APPLICATIONS || 0,
-      approved_applications: approvedResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
-      pending_applications: pendingResult.rows?.[0]?.PENDING_APPLICATIONS || 0,
-      delayed_applications: delayedResult.rows?.[0]?.DELAYED_APPLICATIONS || 0,
-      approved_percentage: approvedPercentageResult.rows?.[0]?.APPROVED_PERCENTAGE || 0,
-      todays_applications: todayAppResult.rows?.[0]?.TODAYS_APPLICATIONS || 0,
-      todays_approved: todayApprovedResult.rows?.[0]?.TODAYS_APPROVED || 0
-    };
-  } catch (error) {
-    throw error;
-  }
+ const totalAppResult = await executeQuery(totalAppSql, binds);
+const approvedResult = await executeQuery(approvedSql, binds);
+const pendingResult = await executeQuery(pendingSql, binds);
+const delayedResult = await executeQuery(delayedSql, binds);
+const approvedPercentageResult = await executeQuery(approvedPercentageSql, binds);
+const todayAppResult = await executeQuery(todayAppSql, binds);
+const todayApprovedResult = await executeQuery(todayApprovedSql, binds);
+
+  return {
+    total_applications: totalAppResult.rows || [],
+    approved_applications: approvedResult.rows || [],
+    pending_applications: pendingResult.rows || [],
+    delayed_applications: delayedResult.rows || [],
+    approved_percentage: approvedPercentageResult.rows || [],
+    todays_applications:
+      todayAppResult.rows?.[0]?.TODAYS_APPLICATIONS || 0,
+    todays_approved:
+      todayApprovedResult.rows?.[0]?.TODAYS_APPROVED || 0,
+  };
 }
 
 // Deptwise applications view
 async function repoDeptWiseApplications(ulbId) {
   const sql = `SELECT * FROM vw_deptwise_applications`;
-  const result = await executeQuery(sql,{});
+  const result = await executeQuery(sql, {});
   return result.rows || [];
 }
 
 // TAT wise pending applications
 async function repoTatWisePending(ulbId) {
   const sql = `SELECT * FROM vw_tatwise_pending`;
-  const result = await executeQuery(sql,{});
+  const result = await executeQuery(sql, {});
   return result.rows || [];
 }
 
 // Monthwise application trend
 async function repoMonthwiseApplicationTrend(ulbId) {
   const sql = `SELECT * FROM vw_monthwiseapplication_trend`;
-  const result = await executeQuery(sql,{});
+  const result = await executeQuery(sql, {});
   return result.rows || [];
 }
 
@@ -278,8 +241,7 @@ async function repoAlerts(ulbId) {
   const approvedResult = await executeQuery(approvedSql, { ulbId });
   return {
     pendingBuckets: pendingResult.rows || [],
-    approvedApplications:
-      approvedResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
+    approvedApplications: approvedResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
   };
 }
 
@@ -321,6 +283,11 @@ module.exports = {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts,
-  repoComplaintStatus, repoRTSComplaints, repoOfficerWork
+  repoServicewiseTopDelay,
+  repoPrabhagwiseApplications,
+  repoCommissionerSummary,
+  repoAlerts,
+  repoComplaintStatus,
+  repoRTSComplaints,
+  repoOfficerWork,
 };

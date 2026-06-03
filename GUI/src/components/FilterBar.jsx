@@ -1,78 +1,60 @@
 import React, { useState, useEffect } from "react";
 import apiClient from "../services/apiClient";
 
-export default function FilterBar() {
+export default function FilterBar({ filters, onFilterChange }) {
   const [wardOptions, setWardOptions] = useState([]);
   const [typeOptions, setTypeOptions] = useState([]);
   const [officerOptions, setOfficerOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
-    fromDate: "",
-    toDate: "",
-    ward: "",
-    department: "",
-    type: "",
-    office: "",
-    officer: "",
-    status: "",
-  });
+  // Format date from YYYY-MM-DD to DD-MMM-YYYY (e.g., 30-MAR-2026)
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const monthAbbr = months[parseInt(month, 10) - 1];
+    return `${day}-${monthAbbr}-${year}`;
+  };
+
+  // Convert from DD-MMM-YYYY to YYYY-MM-DD for input[type="date"]
+  const toDateInputValue = (formattedDate) => {
+    if (!formattedDate) return "";
+    const parts = formattedDate.split("-");
+    if (parts.length !== 3) return "";
+    const day = parts[0];
+    const monthAbbr = parts[1];
+    const year = parts[2];
+    const months = { "JAN":"01","FEB":"02","MAR":"03","APR":"04","MAY":"05","JUN":"06",
+                     "JUL":"07","AUG":"08","SEP":"09","OCT":"10","NOV":"11","DEC":"12" };
+    const month = months[monthAbbr] || "01";
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
         const endpoints = [
           { name: "ward", request: apiClient.get("/dropdowns/wards?ulbid=4") },
-          {
-            name: "type",
-            request: apiClient.get("/dropdowns/services?ulbId=4"),
-          },
-          {
-            name: "officer",
-            request: apiClient.get("/dropdowns/users?ulbid=4"),
-          },
-          {
-            name: "status",
-            request: apiClient.get("/dropdowns/getStatusDropdown?ulbId=4"),
-          },
+          { name: "type", request: apiClient.get("/dropdowns/services?ulbId=4") },
+          { name: "officer", request: apiClient.get("/dropdowns/users?ulbid=4") },
+          { name: "status", request: apiClient.get("/dropdowns/getStatusDropdown?ulbId=4") },
         ];
 
-        const results = await Promise.allSettled(
-          endpoints.map((e) => e.request)
-        );
+        const results = await Promise.allSettled(endpoints.map((e) => e.request));
 
         results.forEach((result, index) => {
           const endpointName = endpoints[index].name;
           if (result.status === "fulfilled" && result.value?.success) {
             const response = result.value;
             if (endpointName === "ward" && response.data?.rows) {
-              const wards = response.data.rows.map((w) => ({
-                label: w.WARDNAME,
-                value: w.WARDID,
-              }));
-              setWardOptions(wards);
+              setWardOptions(response.data.rows.map((w) => ({ label: w.WARDNAME, value: w.WARDID })));
             } else if (endpointName === "type" && response.data?.rows) {
-              const services = response.data.rows.map((s) => ({
-                label: s.VAR_SERVICE_ENG_NAME,
-                value: s.NUM_SERVICE_SERVICEID,
-              }));
-              setTypeOptions(services);
+              setTypeOptions(response.data.rows.map((s) => ({ label: s.VAR_SERVICE_ENG_NAME, value: s.NUM_SERVICE_SERVICEID })));
             } else if (endpointName === "officer" && response.data?.rows) {
-              const users = response.data.rows.map((u) => ({
-                label: u.VAR_USER_USERNAME,
-                value: u.VAR_USER_USERNAME,
-              }));
-              setOfficerOptions(users);
-            } else if (
-              endpointName === "status" &&
-              Array.isArray(response.data)
-            ) {
-              const statuses = response.data.map((s) => ({
-                label: s.STATUS,
-                value: s.STATUS,
-              }));
-              setStatusOptions(statuses);
+              setOfficerOptions(response.data.rows.map((u) => ({ label: u.VAR_USER_USERNAME, value: u.VAR_USER_USERNAME })));
+            } else if (endpointName === "status" && Array.isArray(response.data)) {
+              setStatusOptions(response.data.map((s) => ({ label: s.STATUS, value: s.STATUS })));
             } else {
               if (endpointName === "ward") setWardOptions([]);
               if (endpointName === "type") setTypeOptions([]);
@@ -100,25 +82,26 @@ export default function FilterBar() {
     fetchDropdowns();
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const [year, month, day] = dateString.split("-");
-    return `${day}-${month}-${year}`;
-  };
-
   const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    const formatted = formatDate(value);
-    setFormData((prev) => ({ ...prev, [name]: formatted }));
+    const { name, value } = e.target; // value is YYYY-MM-DD
+    // Convert to DD-MMM-YYYY
+    if (value) {
+      const [year, month, day] = value.split("-");
+      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const formatted = `${day}-${months[parseInt(month,10)-1]}-${year}`;
+      onFilterChange({ ...filters, [name]: formatted });
+    } else {
+      onFilterChange({ ...filters, [name]: "" });
+    }
   };
 
-  const handleChange = (e) => {
+  const handleSelectChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    onFilterChange({ ...filters, [name]: value });
   };
 
   const handleReset = () => {
-    setFormData({
+    onFilterChange({
       fromDate: "",
       toDate: "",
       ward: "",
@@ -139,7 +122,7 @@ export default function FilterBar() {
         <input
           type="date"
           name="fromDate"
-          value={formData.fromDate ? formData.fromDate.split("-").reverse().join("-") : ""}
+          value={toDateInputValue(filters.fromDate)}
           onChange={handleDateChange}
           className="filter-select"
         />
@@ -151,7 +134,7 @@ export default function FilterBar() {
         <input
           type="date"
           name="toDate"
-          value={formData.toDate ? formData.toDate.split("-").reverse().join("-") : ""}
+          value={toDateInputValue(filters.toDate)}
           onChange={handleDateChange}
           className="filter-select"
         />
@@ -160,17 +143,10 @@ export default function FilterBar() {
       {/* विभाग */}
       <div className="filter-group">
         <label className="filter-label">विभाग</label>
-        <select
-          name="department"
-          value={formData.department}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="department" value={filters.department} onChange={handleSelectChange} className="filter-select">
           <option value="">-- Select Department --</option>
           {wardOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
@@ -178,17 +154,10 @@ export default function FilterBar() {
       {/* सेवा प्रकार */}
       <div className="filter-group">
         <label className="filter-label">सेवा प्रकार</label>
-        <select
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="type" value={filters.type} onChange={handleSelectChange} className="filter-select">
           <option value="">-- Select Type --</option>
           {typeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
@@ -196,12 +165,7 @@ export default function FilterBar() {
       {/* प्रभाग */}
       <div className="filter-group">
         <label className="filter-label">प्रभाग</label>
-        <select
-          name="ward"
-          value={formData.ward}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="ward" value={filters.ward} onChange={handleSelectChange} className="filter-select">
           <option value="">-- Select Ward --</option>
           <option value="Ho">HO</option>
         </select>
@@ -210,17 +174,10 @@ export default function FilterBar() {
       {/* अधिकारी */}
       <div className="filter-group">
         <label className="filter-label">अधिकारी</label>
-        <select
-          name="officer"
-          value={formData.officer}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="officer" value={filters.officer} onChange={handleSelectChange} className="filter-select">
           <option value="">-- Select Officer --</option>
           {officerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
@@ -228,17 +185,10 @@ export default function FilterBar() {
       {/* Status */}
       <div className="filter-group">
         <label className="filter-label">Status</label>
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="status" value={filters.status} onChange={handleSelectChange} className="filter-select">
           <option value="">-- Select Status --</option>
           {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>

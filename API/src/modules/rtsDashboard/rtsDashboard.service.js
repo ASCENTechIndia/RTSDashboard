@@ -6,7 +6,7 @@ const {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary
+  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts
 } = require('./rtsDashboard.repository');
 
 async function serviceCounts(ulbId) {
@@ -49,6 +49,10 @@ async function serviceCommissionerSummary(){
   return repoCommissionerSummary();
 }
 
+async function serviceAlerts(ulbId){
+  return repoAlerts(ulbId);
+}
+
 module.exports = {
   serviceCounts,
   serviceDeptWiseApplications,
@@ -58,5 +62,5 @@ module.exports = {
   serviceDetailedApplicationStatus,
   serviceTopServices,
   serviceServicewiseTopDelay,
-  servicePrabhagwiseApplications, serviceCommissionerSummary
+  servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts
 };

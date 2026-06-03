@@ -8,7 +8,7 @@ const {
   getApplicationStatusSummary,
   getDetailedApplicationStatus,
   getTopServices,
-  getServicewiseTopDelay, getPrabhagwiseApplications, getCommissionerSummary
+  getServicewiseTopDelay, getPrabhagwiseApplications, getCommissionerSummary, getAlerts
 } = require('./rtsDashboard.controller');
 
 const router = express.Router();
@@ -23,5 +23,6 @@ router.get('/topServices', getTopServices);
 router.get('/servicewiseTopDelay', getServicewiseTopDelay);
 router.get('/getPrabhagwiseApplications', getPrabhagwiseApplications);
 router.get('/getCommissionerSummary', getCommissionerSummary);
+router.get('/getAlerts', getAlerts);
 
 module.exports = router;

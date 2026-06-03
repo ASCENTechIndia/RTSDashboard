@@ -7,7 +7,7 @@ const {
   serviceDetailedApplicationStatus,
   serviceTopServices,
   serviceServicewiseTopDelay,
-  servicePrabhagwiseApplications, serviceCommissionerSummary
+  servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -218,6 +218,26 @@ async function getCommissionerSummary(req, res, next) {
   }
 }
 
+async function getAlerts(req, res, next) {
+   try {
+    const ulbId = req.query.ulbId || req.user?.ulbId;
+    const rows = await serviceAlerts(ulbId);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Alerts fetched');
+    auditLog({
+      action: 'ALERTS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { ulbId, count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Alerts error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
@@ -227,5 +247,5 @@ module.exports = {
   getDetailedApplicationStatus,
   getTopServices,
   getServicewiseTopDelay,
-  getPrabhagwiseApplications, getCommissionerSummary
+  getPrabhagwiseApplications, getCommissionerSummary, getAlerts
 };

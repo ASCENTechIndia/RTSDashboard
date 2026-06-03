@@ -22,5 +22,6 @@ router.get('/detailedApplicationStatus', getDetailedApplicationStatus);
 router.get('/topServices', getTopServices);
 router.get('/servicewiseTopDelay', getServicewiseTopDelay);
 router.get('/getPrabhagwiseApplications', getPrabhagwiseApplications);
+router.get('/getCommisioner', getPrabhagwiseApplications);
 
 module.exports = router;

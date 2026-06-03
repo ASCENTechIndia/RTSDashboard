@@ -183,7 +183,7 @@ async function getServicewiseTopDelay(req, res, next) {
 async function getPrabhagwiseApplications(req, res, next) {
   try {
     const rows = await servicePrabhagwiseApplications();
-    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications fetched');
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications completed');
     auditLog({
       action: 'PRABHAGWISE_APPLICATIONS',
       actor: req.user?.userId || 'system',

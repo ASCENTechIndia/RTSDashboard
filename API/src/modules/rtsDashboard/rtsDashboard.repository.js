@@ -213,8 +213,7 @@ async function repoServicewiseTopDelay(ulbId) {
 }
 
 async function repoPrabhagwiseApplications() {
-  const sql = `SELECT
-    wardname,
+  const sql = `SELECT wardname,
     (approved_applications + pending_applications) AS total_applications,
     approved_applications,
     pending_applications,

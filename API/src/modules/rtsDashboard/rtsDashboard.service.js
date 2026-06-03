@@ -42,7 +42,7 @@ async function serviceServicewiseTopDelay(ulbId) {
 }
 
 async function servicePrabhagwiseApplications(){
-  return repoPrabhagwiseApplications();
+  return repoPrabhagwiseApplications()
 }
 
 module.exports = {

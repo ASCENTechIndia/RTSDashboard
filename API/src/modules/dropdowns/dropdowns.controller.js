@@ -1,4 +1,4 @@
-const {serviceStatusDropdown,serviceGetServices} = require('./dropdowns.service');
+const {serviceStatusDropdown, serviceGetServices, serviceGetWards, serviceGetUsers} = require('./dropdowns.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -37,6 +37,46 @@ async function getServices(req, res, next) {
 
 
 
+async function getWards(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || 4;
+    const data = await serviceGetWards(ulbId);
+    logApiSuccess(req, 200, { count: data?.length || 0 }, 'Wards Report completed');
+    auditLog({
+      action: 'GET_WARDS',
+      actor: req.user?.userId ,
+      module: 'dropdowns',
+      status: 'SUCCESS',
+      details: { ulbId },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Wards Report error');
+    return next(error);
+  }
+}
+
+async function getUsers(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || 4;
+    const data = await serviceGetUsers(ulbId);
+    logApiSuccess(req, 200, { count: data?.length || 0 }, 'Users Report completed');
+    auditLog({
+      action: 'GET_USERS',
+      actor: req.user?.userId ,
+      module: 'dropdowns',
+      status: 'SUCCESS',
+      details: { ulbId },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Users Report error');
+    return next(error);
+  }
+}
+
 async function getStatusDropdown(req, res, next) {
   try {
      const ulbId = req.query.ulbId || req.user?.ulbId;
@@ -57,4 +97,4 @@ async function getStatusDropdown(req, res, next) {
      }
    }
 
-module.exports = {getStatusDropdown,getServices}
+module.exports = {getStatusDropdown, getServices, getWards, getUsers}

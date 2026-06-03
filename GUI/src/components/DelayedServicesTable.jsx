@@ -10,8 +10,6 @@ export default function DelayedServicesTable() {
     try {
       const response = await apiClient.get(`/rts-dashboard/servicewiseTopDelay`);
 
-      console.log(response);
-
       if (response.success) {
         const updatedData = response.data.map(item => ({
           service: item?.SERVICE_NAME,

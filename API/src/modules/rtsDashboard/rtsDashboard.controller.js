@@ -8,7 +8,7 @@ const {
   serviceTopServices,
   serviceServicewiseTopDelay,
   servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts,
-  serviceComplaintStatus, serviceRTSComplaints
+  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -277,6 +277,25 @@ async function getRTSComplaints(req, res, next) {
   }
 }
 
+async function getOfficerWork(req, res, next) {
+  try {
+    const rows = await serviceOfficerWork();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Officer work fetched');
+    auditLog({
+      action: 'OFFICER_WORK',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Officer Work error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
@@ -287,5 +306,5 @@ module.exports = {
   getTopServices,
   getServicewiseTopDelay,
   getPrabhagwiseApplications, getCommissionerSummary, getAlerts,
-  getComplaintStatus, getRTSComplaints
+  getComplaintStatus, getRTSComplaints, getOfficerWork
 };

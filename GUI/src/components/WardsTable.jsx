@@ -14,13 +14,17 @@ const WardsTable = () => {
           "/rts-dashboard/getPrabhagwiseApplications",
         );
         if (response.success && Array.isArray(response.data)) {
-          const sorted = [...response.data].sort(
-            (a, b) => b.TOTAL_APPLICATIONS - a.TOTAL_APPLICATIONS,
-          );
-          const top10 = sorted.slice(0, 10);
-          setWardsData(top10);
+          // Just iterate and store – no sorting, no slicing
+          const data = response.data.map((item) => ({
+            WARDNAME: item.WARDNAME,
+            TOTAL_APPLICATIONS: item.TOTAL_APPLICATIONS,
+            APPROVED_APPLICATIONS: item.APPROVED_APPLICATIONS,
+            PENDING_APPLICATIONS: item.PENDING_APPLICATIONS,
+            APPROVED_PERCENTAGE: item.APPROVED_PERCENTAGE,
+          }));
+          setWardsData(data);
         } else {
-          alert("Data not available");
+          throw new Error(response.message || "Data not available");
         }
       } catch (err) {
         console.error(err);
@@ -38,10 +42,10 @@ const WardsTable = () => {
 
   const headers = [
     { label: "प्रभाग", align: "left" },
-    { label: "प्राप्त" },
-    { label: "निकाली" },
-    { label: "प्रलंबित" },
-    { label: "वेळेत (%)" },
+    { label: "प्राप्त", align: "right" },
+    { label: "निकाली", align: "right" },
+    { label: "प्रलंबित", align: "right" },
+    { label: "वेळेत (%)", align: "right" },
   ];
 
   const keyMapping = {
@@ -55,7 +59,7 @@ const WardsTable = () => {
   return (
     <div className="card">
       <h3 className="card-title">
-        प्रभागनिहाय कामगिरी (Top 10)
+        प्रभागनिहाय कामगिरी
         <span className="view">View All Prabhag ›</span>
       </h3>
       <DataTable

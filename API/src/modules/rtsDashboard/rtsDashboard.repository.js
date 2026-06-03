@@ -283,6 +283,30 @@ async function repoAlerts(ulbId) {
   };
 }
 
+async function repoComplaintStatus() {
+  const sql = `SELECT
+    (pending_complaints + resolved_complaints) AS total_complaints,
+    pending_complaints,
+    resolved_complaints,
+    NVL(
+        ROUND(
+            resolved_complaints * 100 /
+            NULLIF(pending_complaints + resolved_complaints, 0),
+            2
+        ),
+        0
+    ) AS resolved_percentage
+FROM vw_complaints_status`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
+async function repoRTSComplaints() {
+  const sql = `select count(*) as RTS_complaints From aorts_appeal_mas`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
@@ -291,5 +315,6 @@ module.exports = {
   repoApplicationStatusSummary,
   repoDetailedApplicationStatus,
   repoTopServices,
-  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts
+  repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts,
+  repoComplaintStatus, repoRTSComplaints
 };

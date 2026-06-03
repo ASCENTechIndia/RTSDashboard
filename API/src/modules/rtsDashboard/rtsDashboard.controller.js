@@ -23,17 +23,21 @@ function requestMeta(req) {
 
 async function getCounts(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const data = await serviceCounts(ulbId);
+    const ulbId = req.query.ulbId || req.user?.ulbId;
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      deptName: req.query.deptName || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+
+    const data = await serviceCounts(ulbId, filters);
+
     logApiSuccess(req, 200, data, 'Dashboard Counts Report completed');
-    auditLog({
-      action: 'DASHBOARD_COUNTS',
-      actor: req.user?.userId || 'system',
-      module: 'rtsDashboard',
-      status: 'SUCCESS',
-      details: { ulbId },
-      requestMeta: requestMeta(req),
-    });
+
     return res.ok(data);
   } catch (error) {
     logApiError(req, 500, error.message, 'Dashboard Counts Report error');

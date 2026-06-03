@@ -10,8 +10,17 @@ const {
   repoComplaintStatus, repoRTSComplaints, repoOfficerWork
 } = require('./rtsDashboard.repository');
 
-async function serviceCounts(ulbId) {
-  return repoCounts(ulbId);
+async function serviceCounts(ulbId, filters = {}) {
+  return repoCounts(
+    ulbId,
+    filters.fromDate,
+    filters.toDate,
+    filters.deptName,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function serviceDeptWiseApplications(ulbId) {

@@ -37,21 +37,20 @@ async function repoCounts(ulbId=4) {
 
   // Delayed applications
   const delayedSql = `
-    SELECT COUNT(a.var_application_appno) AS delayed_applications
+    select count(a.var_application_appno) delayed_applications
     FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def
-      ON num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config
-      ON num_serv_servid = num_service_serviceid
-      AND num_serv_deptid = num_service_deptid
-      AND num_serv_ulbid = num_application_ulbid
-    WHERE TRUNC(SYSDATE) - TRUNC(dat_application_recieptdate) > num_service_maxdays
-    AND var_application_status IN ('CP','IP','VP','PP') 
-    AND a.num_application_ulbid = :ulbId
+         INNER JOIN aorts_applicant_infodet infodet
+             ON     infodet.var_appl_appno = a.var_application_appno
+                AND num_appl_serviceid = a.num_application_serviceid
+                AND infodet.num_appl_ulbid = a.num_application_ulbid
+         INNER JOIN aorts_service_def
+             ON num_service_serviceid = a.num_application_serviceid
+          left join  aorts_service_config 
+          on num_serv_servid=num_service_serviceid 
+          and num_serv_deptid=num_service_deptid  
+          and num_serv_ulbid=num_application_ulbid
+where trunc(sysdate)-trunc(a.dat_application_insdate)>num_service_maxdays
+and var_application_status in ('CP','IP','VP','PP') and a.num_application_ulbid = :ulbId
   `;
 
   // Approved percentage
@@ -68,7 +67,7 @@ async function repoCounts(ulbId=4) {
       ON num_serv_servid = num_service_serviceid
       AND num_serv_deptid = num_service_deptid
       AND num_serv_ulbid = num_application_ulbid
-    WHERE TRUNC(SYSDATE) - TRUNC(dat_application_recieptdate) <= num_service_maxdays
+    WHERE TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= num_service_maxdays
     AND a.num_application_ulbid = :ulbId
   `;
 

@@ -307,6 +307,12 @@ async function repoRTSComplaints() {
   return result.rows || [];
 }
 
+async function repoOfficerWork() {
+  const sql = `select * From vw_officerwise_works FETCH FIRST 10 ROWS ONLY`;
+  const result = await executeQuery(sql, {});
+  return result.rows || [];
+}
+
 module.exports = {
   repoCounts,
   repoDeptWiseApplications,
@@ -316,5 +322,5 @@ module.exports = {
   repoDetailedApplicationStatus,
   repoTopServices,
   repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts,
-  repoComplaintStatus, repoRTSComplaints
+  repoComplaintStatus, repoRTSComplaints, repoOfficerWork
 };

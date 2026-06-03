@@ -1,10 +1,16 @@
-const { repoGetServices } = require('./dropdowns.repo');
+const { repoGetServices ,repoStatusDropdown} = require('./dropdowns.repo');
 
 // Get services by ULB
 async function serviceGetServices(ulbId) {
   return repoGetServices(ulbId);
 }
 
-module.exports = {
-  serviceGetServices
-};
+
+
+async function serviceStatusDropdown(ulbId) {
+  return repoStatusDropdown(ulbId);
+}
+
+
+
+module.exports = {serviceStatusDropdown,serviceGetServices}

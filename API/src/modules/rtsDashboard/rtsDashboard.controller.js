@@ -7,7 +7,8 @@ const {
   serviceDetailedApplicationStatus,
   serviceTopServices,
   serviceServicewiseTopDelay,
-  servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts
+  servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts,
+  serviceComplaintStatus, serviceRTSComplaints
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -238,6 +239,44 @@ async function getAlerts(req, res, next) {
   }
 }
 
+async function getComplaintStatus(req, res, next) {
+  try {
+    const rows = await serviceComplaintStatus();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Complaint status fetched');
+    auditLog({
+      action: 'COMPLAINT_STATUS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Complaint status error');
+    return next(error);
+  }
+}
+
+async function getRTSComplaints(req, res, next) {
+  try {
+    const rows = await serviceRTSComplaints();
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'RTS Complaints fetched');
+    auditLog({
+      action: 'RTS_COMPLAINTS',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'RTS Complaints error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getCounts,
   getDeptWiseApplications,
@@ -247,5 +286,6 @@ module.exports = {
   getDetailedApplicationStatus,
   getTopServices,
   getServicewiseTopDelay,
-  getPrabhagwiseApplications, getCommissionerSummary, getAlerts
+  getPrabhagwiseApplications, getCommissionerSummary, getAlerts,
+  getComplaintStatus, getRTSComplaints
 };

@@ -2,6 +2,9 @@ import React from 'react';
 import { wardsTop10 } from '../data/dummyData';
 
 export default function WardsTable() {
+
+  
+
   return (
     <div className="card">
       <h3 className="card-title">

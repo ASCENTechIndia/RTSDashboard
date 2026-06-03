@@ -49,14 +49,12 @@ const DataTable = ({
                   {headers.map((header, colIndex) => {
                     const key = keyMapping[header.label] || header.label;
                     let value = row[key];
-                    // Format numbers if needed (optional)
                     if (
                       typeof value === "number" &&
                       header.label !== "प्रभाग"
                     ) {
                       value = value.toLocaleString("en-IN");
                     }
-                    // Special formatting for percentage
                     if (header.label === "वेळेत (%)" && value !== undefined) {
                       value = `${value}%`;
                     }

@@ -17,6 +17,30 @@ async function repoGetServices(ulbId = 4) {
 
 
 
+// Get wards by ULB
+async function repoGetWards(ulbId = 4) {
+  const sql = `
+    SELECT DISTINCT wardname, wardid
+    FROM prop.vw_ward_mas
+    INNER JOIN aorts_application_det
+      ON wardid = num_application_zoneid
+    WHERE num_application_ulbid = :ulbId
+  `;
+  return executeQuery(sql, { ulbId });
+}
+
+// Get users by ULB
+async function repoGetUsers(ulbId = 4) {
+  const sql = `
+    SELECT DISTINCT var_user_username
+    FROM aorts_application_det a
+    INNER JOIN admins.aoms_dept_mas d ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u ON d.num_dept_id = u.num_user_deptid
+    WHERE u.num_user_ulbid = :ulbId
+  `;
+  return executeQuery(sql, { ulbId });
+}
+
 async function repoStatusDropdown(ulbId) {
   const sql = `select distinct
 (CASE WHEN var_application_status IN ('NW','AP','DL') THEN 'approved' 
@@ -28,4 +52,4 @@ from aorts_application_det where num_application_ulbid = :ulbId`;
 }
 
 
-module.exports = {repoStatusDropdown,repoGetServices}
+module.exports = {repoStatusDropdown,repoGetServices,repoGetWards,repoGetUsers}

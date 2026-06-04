@@ -92,7 +92,7 @@ export default function KpiRow({ filters }) {
             id: "ontime",
             icon: "target",
             label: "वेळेत निकाली (%)",
-            value: `${getCount(d.approved_percentage)}%`,
+           value: `${Number(d.approved_percentage || 0).toFixed(2)}%`,
             color: "#16a34a",
           },
           {

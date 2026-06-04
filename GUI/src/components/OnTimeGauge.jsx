@@ -9,7 +9,7 @@ export default function OnTimeGauge({ filters }) {
   const [pending, setPending] = useState(0);
   const [approvedPct, setApprovedPct] = useState("0.00");
   const [pendingPct, setPendingPct] = useState("0.00");
-
+  const [approvedPercentage, setApprovedPercentage] = useState("0.00");
   const fetchSummary = async () => {
     setLoader(true);
     try {
@@ -33,6 +33,8 @@ export default function OnTimeGauge({ filters }) {
         const pend = Number(
           response.data.resolved_pending.pending_applications || 0,
         );
+        const approvedPercentage = response.data.approved_percentage || 0;
+        setApprovedPercentage(approvedPercentage.toFixed(2));
         const total = apr + pend;
         setApproved(apr);
         setPending(pend);
@@ -60,8 +62,8 @@ export default function OnTimeGauge({ filters }) {
   }, [filters]);
 
   const gaugeData = [
-    { name: "वेळेत", value: parseFloat(approvedPct), color: "#22a06b" },
-    { name: "विलंबित", value: parseFloat(pendingPct), color: "#e23b3b" },
+    { name: "वेळेत", value: parseFloat(approvedPercentage), color: "#22a06b" },
+    { name: "विलंबित", value: parseFloat(100 - approvedPercentage), color: "#e23b3b" },
   ];
 
   const pieData = [
@@ -110,7 +112,7 @@ export default function OnTimeGauge({ filters }) {
           </div>
           <div className="gauge-center">
             <div className="big" style={{ color: "#16a34a" }}>
-              {approvedPct}%
+              {approvedPercentage}%
             </div>
           </div>
         </div>

@@ -47,10 +47,12 @@ AND (:status IS NULL OR status = :status)
     "delayed_applications"
   );
 
-  const approvedPercentageSql = buildViewQuery(
-    "vw_withintime_perc",
-    "approved_percentage"
-  );
+ const approvedPercentageSql = `
+  SELECT ROUND(AVG(approved_percentage), 2) AS approved_percentage
+  FROM vw_withintime_perc
+  WHERE 1 = 1
+  ${commonFilters}
+`;
 
   const todayAppSql = buildViewQuery(
     "vw_todays_applications",
@@ -82,7 +84,7 @@ const todayApprovedResult = await executeQuery(todayApprovedSql, binds);
     approved_applications: approvedResult.rows || [],
     pending_applications: pendingResult.rows || [],
     delayed_applications: delayedResult.rows || [],
-    approved_percentage: approvedPercentageResult.rows || [],
+    approved_percentage:approvedPercentageResult.rows?.[0]?.APPROVED_PERCENTAGE || 0,
     todays_applications:
       todayAppResult.rows?.[0]?.TODAYS_APPLICATIONS || 0,
     todays_approved:

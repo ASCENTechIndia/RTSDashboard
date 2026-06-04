@@ -23,8 +23,13 @@ async function serviceCounts(ulbId, filters = {}) {
   );
 }
 
-async function serviceDeptWiseApplications(ulbId) {
-  return repoDeptWiseApplications(ulbId);
+async function serviceDeptWiseApplications( filters = {}) {
+  return repoDeptWiseApplications( filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status);
 }
 
 async function serviceTatWisePending( filters = {}) {

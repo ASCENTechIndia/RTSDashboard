@@ -91,9 +91,45 @@ const todayApprovedResult = await executeQuery(todayApprovedSql, binds);
 }
 
 // Deptwise applications view
-async function repoDeptWiseApplications(ulbId) {
-  const sql = `SELECT * FROM vw_deptwise_applications`;
-  const result = await executeQuery(sql, {});
+async function repoDeptWiseApplications(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      var_dept_engname,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      approved_percentage
+    FROM vw_deptwise_applications
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY total_applications DESC
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 

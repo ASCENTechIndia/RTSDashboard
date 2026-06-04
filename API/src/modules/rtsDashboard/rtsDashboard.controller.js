@@ -47,15 +47,22 @@ async function getCounts(req, res, next) {
 
 async function getDeptWiseApplications(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceDeptWiseApplications(ulbId);
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceDeptWiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Department-wise Applications Report completed');
     auditLog({
       action: 'DEPT_WISE_APPLICATIONS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);

@@ -47,15 +47,22 @@ async function getCounts(req, res, next) {
 
 async function getDeptWiseApplications(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceDeptWiseApplications(ulbId);
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceDeptWiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Department-wise Applications Report completed');
     auditLog({
       action: 'DEPT_WISE_APPLICATIONS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -67,15 +74,22 @@ async function getDeptWiseApplications(req, res, next) {
 
 async function getTatWisePending(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceTatWisePending(ulbId);
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceTatWisePending(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'TAT-wise Pending Applications Report completed');
     auditLog({
       action: 'TAT_WISE_PENDING',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -87,15 +101,22 @@ async function getTatWisePending(req, res, next) {
 
 async function getMonthwiseApplicationTrend(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceMonthwiseApplicationTrend(ulbId);
+     const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceMonthwiseApplicationTrend(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Monthwise Application Trend Report completed');
     auditLog({
       action: 'MONTHWISE_APPLICATION_TREND',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -107,15 +128,22 @@ async function getMonthwiseApplicationTrend(req, res, next) {
 
 async function getApplicationStatusSummary(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const data = await serviceApplicationStatusSummary(ulbId);
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const data = await serviceApplicationStatusSummary(filters);
     logApiSuccess(req, 200, data, 'Application Status Summary Report completed');
     auditLog({
       action: 'APPLICATION_STATUS_SUMMARY',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId },
+      details: { filters },
       requestMeta: requestMeta(req),
     });
     return res.ok(data);
@@ -127,15 +155,22 @@ async function getApplicationStatusSummary(req, res, next) {
 
 async function getDetailedApplicationStatus(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const data = await serviceDetailedApplicationStatus(ulbId);
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const data = await serviceDetailedApplicationStatus(filters);
     logApiSuccess(req, 200, data, 'Detailed Application Status Report completed');
     auditLog({
       action: 'DETAILED_APPLICATION_STATUS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId },
+      details: { filters },
       requestMeta: requestMeta(req),
     });
     return res.ok(data);
@@ -147,15 +182,22 @@ async function getDetailedApplicationStatus(req, res, next) {
 
 async function getTopServices(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceTopServices(ulbId);
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceTopServices(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Top Services Report completed');
     auditLog({
       action: 'TOP_SERVICES',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -167,15 +209,22 @@ async function getTopServices(req, res, next) {
 
 async function getServicewiseTopDelay(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const rows = await serviceServicewiseTopDelay(ulbId);
+     const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceServicewiseTopDelay(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Service-wise Top Delay Report completed');
     auditLog({
       action: 'SERVICEWISE_TOP_DELAY',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId, count: rows?.length || 0 },
+      details: { filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -187,14 +236,22 @@ async function getServicewiseTopDelay(req, res, next) {
 
 async function getPrabhagwiseApplications(req, res, next) {
   try {
-    const rows = await servicePrabhagwiseApplications();
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await servicePrabhagwiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications completed');
     auditLog({
       action: 'PRABHAGWISE_APPLICATIONS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: {  count: rows?.length || 0 },
+      details: {filters,  count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -206,14 +263,22 @@ async function getPrabhagwiseApplications(req, res, next) {
 
 async function getCommissionerSummary(req, res, next) {
   try {
-    const rows = await serviceCommissionerSummary();
+     const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceCommissionerSummary(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Commissioner summary completed');
     auditLog({
       action: 'COMMISSIONER_SUMMARY',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: {  count: rows?.length || 0 },
+      details: {filters,  count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);
@@ -283,14 +348,22 @@ async function getRTSComplaints(req, res, next) {
 
 async function getOfficerWork(req, res, next) {
   try {
-    const rows = await serviceOfficerWork();
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await serviceOfficerWork(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Officer work fetched');
     auditLog({
       action: 'OFFICER_WORK',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { count: rows?.length || 0 },
+      details: {filters, count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);

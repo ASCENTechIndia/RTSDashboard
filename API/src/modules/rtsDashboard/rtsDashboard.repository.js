@@ -91,112 +91,407 @@ const todayApprovedResult = await executeQuery(todayApprovedSql, binds);
 }
 
 // Deptwise applications view
-async function repoDeptWiseApplications(ulbId) {
-  const sql = `SELECT * FROM vw_deptwise_applications`;
-  const result = await executeQuery(sql, {});
+async function repoDeptWiseApplications(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      var_dept_engname,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      approved_percentage
+    FROM vw_deptwise_applications
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY total_applications DESC
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 
 // TAT wise pending applications
-async function repoTatWisePending(ulbId) {
-  const sql = `SELECT * FROM vw_tatwise_pending`;
-  const result = await executeQuery(sql, {});
-  return result.rows || [];
+async function repoTatWisePending(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `SELECT
+    days_bucket,
+    SUM(pending_applications) AS pending_count,
+    ROUND(
+        SUM(pending_applications) * 100 /
+        SUM(SUM(pending_applications)) OVER (),
+        2
+    ) AS percentage
+FROM vw_tatwise_pending
+WHERE 1 = 1
+  AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+  AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+  AND (:serviceName IS NULL OR servnm = :serviceName)
+  AND (:wardName IS NULL OR prabhag_nm = :wardName)
+  AND (:officerName IS NULL OR officer_name = :officerName)
+  AND (:status IS NULL OR status = :status)
+GROUP BY days_bucket
+ORDER BY
+  CASE days_bucket
+    WHEN '0 - 3' THEN 1
+    WHEN '4 - 7' THEN 2
+    WHEN '8 - 15' THEN 3
+    WHEN '15+' THEN 4
+  END`;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const result = await executeQuery(sql, binds);
+
+  const totalPending = result.rows.reduce(
+    (sum, row) => sum + Number(row.PENDING_COUNT || 0),
+    0
+  );
+
+  return {
+    totalPending,
+    buckets: result.rows,
+  };
 }
 
 // Monthwise application trend
-async function repoMonthwiseApplicationTrend(ulbId) {
-  const sql = `SELECT * FROM vw_monthwiseapplication_trend`;
-  const result = await executeQuery(sql, {});
+async function repoMonthwiseApplicationTrend(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      months,
+      SUM(received_applications) AS received_applications,
+      SUM(approved_applications) AS approved_applications
+    FROM vw_monthwiseapplication_trend
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    GROUP BY months
+    ORDER BY MIN(app_date)
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const result = await executeQuery(sql, binds);
+
   return result.rows || [];
 }
 
 // Application Status Summary - Approved vs Pending
-async function repoApplicationStatusSummary(ulbId = 4) {
-  const sql = `
-    SELECT 
-      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
-      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL') THEN 1 END) AS pending_applications
-    FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
-      INNER JOIN aorts_service_def
-        ON num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config 
-        ON num_serv_servid = num_service_serviceid 
-        AND num_serv_deptid = num_service_deptid  
-        AND num_serv_ulbid = num_application_ulbid
-    WHERE a.num_application_ulbid = :ulbId
+async function repoApplicationStatusSummary(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const commonFilters = `
+    AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+    AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+    AND (:serviceName IS NULL OR servnm = :serviceName)
+    AND (:wardName IS NULL OR prabhag_nm = :wardName)
+    AND (:officerName IS NULL OR officer_name = :officerName)
+    AND (:status IS NULL OR status = :status)
   `;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
-  return result.rows?.[0] || {};
+
+  const approvedSql = `
+    SELECT ROUND(AVG(approved_percentage), 2) AS approved_percentage
+    FROM vw_withintime_perc
+    WHERE 1 = 1
+    ${commonFilters}
+  `;
+
+  const resolvedPendingSql = `
+    SELECT
+      SUM(approved_applications) AS approved_applications,
+      SUM(pending_applications) AS pending_applications
+    FROM vw_resolvedpending_applications
+    WHERE 1 = 1
+    ${commonFilters}
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const [approvedResult, resolvedPendingResult] = await Promise.all([
+    executeQuery(approvedSql, binds),
+    executeQuery(resolvedPendingSql, binds),
+  ]);
+
+  return {
+    approved_percentage:
+      approvedResult.rows?.[0]?.APPROVED_PERCENTAGE || 0,
+
+    resolved_pending: {
+      approved_applications:
+        resolvedPendingResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
+
+      pending_applications:
+        resolvedPendingResult.rows?.[0]?.PENDING_APPLICATIONS || 0,
+    },
+  };
 }
 
 // Detailed Application Status Summary
-async function repoDetailedApplicationStatus(ulbId = 4) {
+async function repoDetailedApplicationStatus(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
   const sql = `
-    SELECT 
-      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
-      SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP') THEN 1 END) AS pending_applications,
-      SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END) AS reject_applications,
-      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL','CP','IP','VP','PP','CR','DN') THEN 1 END) AS others_applications
-    FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
-      INNER JOIN aorts_service_def
-        ON num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config 
-        ON num_serv_servid = num_service_serviceid 
-        AND num_serv_deptid = num_service_deptid  
-        AND num_serv_ulbid = num_application_ulbid
-    WHERE a.num_application_ulbid = :ulbId
+    SELECT
+      SUM(approved_applications) AS approved_applications,
+      SUM(pending_applications) AS pending_applications,
+      SUM(reject_applications) AS reject_applications
+    FROM vw_statuswise_application
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
   `;
-  const binds = { ulbId: Number(ulbId) };
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
   const result = await executeQuery(sql, binds);
-  return result.rows?.[0] || {};
+
+  return result.rows?.[0] || {
+    APPROVED_APPLICATIONS: 0,
+    PENDING_APPLICATIONS: 0,
+    REJECT_APPLICATIONS: 0,
+  };
 }
 
 // Top Services
-async function repoTopServices(ulbId) {
-  const sql = `SELECT * FROM vw_top_services`;
-  const result = await executeQuery(sql, {});
+async function repoTopServices(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      rank_no,
+      servnm,
+      SUM(approved_applications) AS approved_applications
+    FROM vw_top_services
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    GROUP BY rank_no, servnm
+    ORDER BY rank_no
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 
 // Service-wise Top Delay
-async function repoServicewiseTopDelay(ulbId) {
-  const sql = `SELECT * FROM vw_servicewisetop_delay`;
-  const result = await executeQuery(sql, {});
+async function repoServicewiseTopDelay(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      delayed_applications,
+      avg_delay_days
+    FROM vw_servicewisetop_delay
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY delayed_applications DESC, avg_delay_days DESC
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 
-async function repoPrabhagwiseApplications() {
-  const sql = `SELECT wardname,
-    (approved_applications + pending_applications) AS total_applications,
-    approved_applications,
-    pending_applications,
-    NVL(
-        ROUND(
-            approved_applications * 100 /
-            NULLIF(approved_applications + pending_applications, 0),
-            2
-        ),
-        0
-    ) AS approved_percentage
-FROM aorts.vw_prabhagwise_applications
-ORDER BY (approved_applications + pending_applications) DESC`;
-  const result = await executeQuery(sql, {});
+async function repoPrabhagwiseApplications(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      applications_greater15,
+      approved_percentage,
+      rank
+    FROM vw_prbhagwise_applications
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY rank
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 
-async function repoCommissionerSummary() {
-  const sql = `select * from vw_commissioner_summary`;
-  const result = await executeQuery(sql, {});
+async function repoCommissionerSummary(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      applications_greater15,
+      approved_percentage
+    FROM vw_commissioner_summary
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 
@@ -269,9 +564,45 @@ async function repoRTSComplaints() {
   return result.rows || [];
 }
 
-async function repoOfficerWork() {
-  const sql = `select * From vw_officerwise_works FETCH FIRST 10 ROWS ONLY`;
-  const result = await executeQuery(sql, {});
+async function repoOfficerWork(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      delayed_applications
+    FROM vw_officerwise_works
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY total_applications DESC
+    FETCH FIRST 10 ROWS ONLY
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 

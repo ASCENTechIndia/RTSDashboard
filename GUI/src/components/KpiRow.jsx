@@ -10,6 +10,7 @@ import {
   Settings,
 } from "lucide-react";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
 const iconComponents = {
   doc: FileText,
@@ -23,13 +24,13 @@ const iconComponents = {
 };
 
 export default function KpiRow({ filters }) {
+  const { setLoader } = useLoader();
   const [kpiCards, setKpiCards] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const fetchCardsData = async () => {
-    setLoading(true);
+    setLoader(true);
     try {
-      // 1. Fetch counts with filters
+      setLoader(true);
       const params = new URLSearchParams();
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
       if (filters.toDate) params.append("toDate", filters.toDate);
@@ -42,10 +43,11 @@ export default function KpiRow({ filters }) {
       const countsEndpoint = `/rts-dashboard/counts${queryString ? `?${queryString}` : ""}`;
       const countsResponse = await apiClient.get(countsEndpoint);
 
-      // 2. Fetch RTS complaints (no filters needed)
       let rtsValue = 0;
       try {
-        const rtsResponse = await apiClient.get("/rts-dashboard/getRTSComplaints");
+        const rtsResponse = await apiClient.get(
+          "/rts-dashboard/getRTSComplaints",
+        );
         if (rtsResponse.success && rtsResponse.data && rtsResponse.data[0]) {
           rtsValue = rtsResponse.data[0].RTS_COMPLAINTS || 0;
         }
@@ -120,16 +122,13 @@ export default function KpiRow({ filters }) {
     } catch (error) {
       console.error("Error fetching KPI data:", error);
     } finally {
-      setLoading(false);
+      setLoader(false);
     }
   };
 
   useEffect(() => {
     fetchCardsData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
-
-  if (loading) return <div className="kpi-row">Loading KPI data...</div>;
 
   return (
     <div className="kpi-row">

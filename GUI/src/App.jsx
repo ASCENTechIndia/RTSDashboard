@@ -18,7 +18,6 @@ import AlertsPanel from './components/AlertsPanel';
 import Footer from './components/Footer';
 
 export default function App() {
-  // Filter state – matches the fields used in FilterBar
   const [filters, setFilters] = useState({
     fromDate: "",
     toDate: "",

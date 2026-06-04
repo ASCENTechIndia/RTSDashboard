@@ -128,15 +128,22 @@ async function getMonthwiseApplicationTrend(req, res, next) {
 
 async function getApplicationStatusSummary(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const data = await serviceApplicationStatusSummary(ulbId);
+    const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const data = await serviceApplicationStatusSummary(filters);
     logApiSuccess(req, 200, data, 'Application Status Summary Report completed');
     auditLog({
       action: 'APPLICATION_STATUS_SUMMARY',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId },
+      details: { filters },
       requestMeta: requestMeta(req),
     });
     return res.ok(data);

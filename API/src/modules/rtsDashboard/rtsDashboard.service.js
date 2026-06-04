@@ -50,8 +50,15 @@ async function serviceMonthwiseApplicationTrend(filters = {}) {
     filters.status);
 }
 
-async function serviceApplicationStatusSummary(ulbId) {
-  return repoApplicationStatusSummary(ulbId);
+async function serviceApplicationStatusSummary(filters = {}) {
+  return repoApplicationStatusSummary(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function serviceDetailedApplicationStatus(filters = {}) {

@@ -230,27 +230,65 @@ async function repoMonthwiseApplicationTrend(
 }
 
 // Application Status Summary - Approved vs Pending
-async function repoApplicationStatusSummary(ulbId = 4) {
-  const sql = `
-    SELECT 
-      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
-      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL') THEN 1 END) AS pending_applications
-    FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
-      INNER JOIN aorts_service_def
-        ON num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config 
-        ON num_serv_servid = num_service_serviceid 
-        AND num_serv_deptid = num_service_deptid  
-        AND num_serv_ulbid = num_application_ulbid
-    WHERE a.num_application_ulbid = :ulbId
+async function repoApplicationStatusSummary(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const commonFilters = `
+    AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+    AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+    AND (:serviceName IS NULL OR servnm = :serviceName)
+    AND (:wardName IS NULL OR prabhag_nm = :wardName)
+    AND (:officerName IS NULL OR officer_name = :officerName)
+    AND (:status IS NULL OR status = :status)
   `;
-  const binds = { ulbId: Number(ulbId) };
-  const result = await executeQuery(sql, binds);
-  return result.rows?.[0] || {};
+
+  const approvedSql = `
+    SELECT ROUND(AVG(approved_percentage), 2) AS approved_percentage
+    FROM vw_withintime_perc
+    WHERE 1 = 1
+    ${commonFilters}
+  `;
+
+  const resolvedPendingSql = `
+    SELECT
+      SUM(approved_applications) AS approved_applications,
+      SUM(pending_applications) AS pending_applications
+    FROM vw_resolvedpending_applications
+    WHERE 1 = 1
+    ${commonFilters}
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const [approvedResult, resolvedPendingResult] = await Promise.all([
+    executeQuery(approvedSql, binds),
+    executeQuery(resolvedPendingSql, binds),
+  ]);
+
+  return {
+    approved_percentage:
+      approvedResult.rows?.[0]?.APPROVED_PERCENTAGE || 0,
+
+    resolved_pending: {
+      approved_applications:
+        resolvedPendingResult.rows?.[0]?.APPROVED_APPLICATIONS || 0,
+
+      pending_applications:
+        resolvedPendingResult.rows?.[0]?.PENDING_APPLICATIONS || 0,
+    },
+  };
 }
 
 // Detailed Application Status Summary

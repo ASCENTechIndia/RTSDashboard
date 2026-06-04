@@ -2,30 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monthlyTrend } from '../data/dummyData';
 import apiClient from '../services/apiClient';
+import { useLoader } from '../context/LoaderContext';
 
-export default function MonthlyTrendChart() {
+export default function MonthlyTrendChart({ filters }) {
+  const { setLoader } = useLoader();
   const [monthlyTrendChartData, setMonthlyTrendChartData] = useState([]);
 
   const fetchTrendChartData = async () => {
     try {
-      const response = await apiClient.get(`/rts-dashboard/monthwiseApplicationTrend`);
+      setLoader(true);
+      const params = new URLSearchParams();
+      if (filters?.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters?.toDate) params.append("toDate", filters.toDate);
+      if (filters?.department) params.append("wardName", filters.department);
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.type) params.append("serviceName", filters.type);
+      if (filters?.officer) params.append("officerName", filters.officer);
+
+      const queryString = params.toString();
+      const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
+
+      const response = await apiClient.get(monthTrendUrl);
 
       if (response.success && response.data.length > 0) {
-        const updatedChartData = response.data.map(item => ({
-          month: item.MONTHS,
-          received: item.RECEIVED_APPLICATIONS || 0,
-          disposed: item.APPROVED_APPLICATIONS || 0
+        const updatedChartData = response?.data.map(item => ({
+          month: item?.MONTHS,
+          received: item?.RECEIVED_APPLICATIONS || 0,
+          disposed: item?.APPROVED_APPLICATIONS || 0
         }));
         setMonthlyTrendChartData(updatedChartData);
       }
     } catch (error) {
       console.error(error);
+    } finally { 
+      setLoader(false);
     }
   }
 
   useEffect(() => {
-    fetchTrendChartData();
-  }, [])
+    if (filters) fetchTrendChartData();
+  }, [filters])
 
   return (
     <div className="card">

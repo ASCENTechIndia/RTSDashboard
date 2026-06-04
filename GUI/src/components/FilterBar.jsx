@@ -229,7 +229,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
           style={{ width: "100%" }}
         >
-          <option value="">-- Select Department --</option>
+          <option value="">सर्व</option>
           {wardOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -248,7 +248,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
           style={{ width: "100%" }}
         >
-          <option value="">-- Select Type --</option>
+          <option value="">सर्व</option>
           {typeOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -267,7 +267,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
           style={{ width: "100%" }}
         >
-          <option value="">-- Select Ward --</option>
+          <option value="">सर्व</option>
           <option value="Ho">HO</option>
         </select>
       </div>
@@ -282,7 +282,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
           style={{ width: "100%" }}
         >
-          <option value="">-- Select Officer --</option>
+          <option value="">सर्व</option>
           {officerOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -301,7 +301,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
           style={{ width: "100%" }}
         >
-          <option value="">-- Select Status --</option>
+          <option value="">सर्व</option>
           {statusOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

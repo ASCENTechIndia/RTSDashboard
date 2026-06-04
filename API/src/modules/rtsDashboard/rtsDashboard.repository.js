@@ -196,8 +196,9 @@ async function repoDetailedApplicationStatus(
   const sql = `
     SELECT
       SUM(approved_applications) AS approved_applications,
-      SUM(pending_applications) AS pending_applications
-    FROM vw_resolvedpending_applications
+      SUM(pending_applications) AS pending_applications,
+      SUM(reject_applications) AS reject_applications
+    FROM vw_statuswise_application
     WHERE 1 = 1
       AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
       AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
@@ -221,6 +222,7 @@ async function repoDetailedApplicationStatus(
   return result.rows?.[0] || {
     APPROVED_APPLICATIONS: 0,
     PENDING_APPLICATIONS: 0,
+    REJECT_APPLICATIONS: 0,
   };
 }
 

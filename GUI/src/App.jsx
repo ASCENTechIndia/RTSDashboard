@@ -46,7 +46,7 @@ export default function App() {
           {/* Row 1 — Dept Table | TAT donut | OnTime gauge | Alerts */}
           <div className="grid-table">
             <DepartmentTable />
-            <TatDonut />
+            <TatDonut filters={filters} />
             <OnTimeGauge />
             <AlertsPanel />
           </div>

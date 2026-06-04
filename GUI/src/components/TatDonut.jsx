@@ -11,14 +11,30 @@ const colors = [
   "#7c3aed"
 ]
 
-export default function TatDonut() {
+export default function TatDonut({ filters }) {
 
   const [tatData, setTatData] = useState([]);
   const [tatTotal, setTatTotal] = useState("");
 
   const fetchTATData = async () => {
     try {
-      const response = await apiClient.get(`/rts-dashboard/tatWisePending`);
+      const params = new URLSearchParams();
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.department) params.append("wardName", filters.department);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("serviceName", filters.type);
+      if (filters.officer) params.append("officerName", filters.officer);
+
+      const queryString = params.toString();
+      const tatUrl = `/rts-dashboard/tatWisePending${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
+
+      console.log(tatUrl);
+      return;
+      
+      const response = await apiClient.get(tatUrl);
+      console.log(response);
+      return;
 
       if (response.success) {
         const total = response.data.reduce((sum, row) => sum += Number(row.PENDING_APPLICATIONS || 0), 0)

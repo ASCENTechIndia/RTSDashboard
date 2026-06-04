@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import FilterBar from './components/FilterBar';
@@ -18,14 +18,30 @@ import AlertsPanel from './components/AlertsPanel';
 import Footer from './components/Footer';
 
 export default function App() {
+  // Filter state – matches the fields used in FilterBar
+  const [filters, setFilters] = useState({
+    fromDate: "",
+    toDate: "",
+    ward: "",
+    department: "",
+    type: "",
+    officer: "",
+    status: "",
+  });
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    console.log("Filters changed:", newFilters);
+  };
+
   return (
     <div className="layout">
       {/* <Sidebar /> */}
       <main className="main">
         <Navbar />
         <div className="content">
-          <FilterBar />
-          <KpiRow />
+          <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+          <KpiRow filters={filters} />
 
           {/* Row 1 — Dept Table | TAT donut | OnTime gauge | Alerts */}
           <div className="grid-table">

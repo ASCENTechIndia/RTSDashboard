@@ -1,129 +1,163 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import apiClient from "../services/apiClient";
 
-export default function FilterBar() {
-  // ----- Separate state arrays for each dropdown's options (dummy data) -----
-  const [dateOptions] = useState([
-    { label: "01/04/2025 - 25/05/2025", value: "01/04/2025 - 25/05/2025" },
-    { label: "अप्रैल 2025", value: "01/04/2025 - 30/04/2025" },
-    { label: "मई 2025", value: "01/05/2025 - 31/05/2025" },
-  ]);
+export default function FilterBar({ filters, onFilterChange }) {
+  const [wardOptions, setWardOptions] = useState([]);
+  const [typeOptions, setTypeOptions] = useState([]);
+  const [officerOptions, setOfficerOptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [wardOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "प्रभाग १", value: "प्रभाग १" },
-    { label: "प्रभाग २", value: "प्रभाग २" },
-    { label: "प्रभाग ३", value: "प्रभाग ३" },
-  ]);
-
-  const [departmentOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "विभाग अ", value: "विभाग अ" },
-    { label: "विभाग ब", value: "विभाग ब" },
-  ]);
-
-  const [typeOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "प्रकार १", value: "प्रकार १" },
-    { label: "प्रकार २", value: "प्रकार २" },
-  ]);
-
-  const [officeOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "मुख्य कार्यालय", value: "मुख्य कार्यालय" },
-    { label: "क्षेत्रीय कार्यालय", value: "क्षेत्रीय कार्यालय" },
-  ]);
-
-  const [officerOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "अधिकारी संजय", value: "अधिकारी संजय" },
-    { label: "अधिकारी प्रीति", value: "अधिकारी प्रीति" },
-  ]);
-
-  const [statusOptions] = useState([
-    { label: "सर्व", value: "सर्व" },
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
-  ]);
-
-  // ----- Single form state for all selected values -----
-  const [formData, setFormData] = useState({
-    date: "01/04/2025 - 25/05/2025",
-    ward: "सर्व",
-    department: "सर्व",
-    type: "सर्व",
-    office: "सर्व",
-    officer: "सर्व",
-    status: "सर्व",
-  });
-
-  // Update handler for all selects
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Format date from YYYY-MM-DD to DD-MMM-YYYY (e.g., 30-MAR-2026)
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const monthAbbr = months[parseInt(month, 10) - 1];
+    return `${day}-${monthAbbr}-${year}`;
   };
 
-  // Reset all to initial values
+  // Convert from DD-MMM-YYYY to YYYY-MM-DD for input[type="date"]
+  const toDateInputValue = (formattedDate) => {
+    if (!formattedDate) return "";
+    const parts = formattedDate.split("-");
+    if (parts.length !== 3) return "";
+    const day = parts[0];
+    const monthAbbr = parts[1];
+    const year = parts[2];
+    const months = { "JAN":"01","FEB":"02","MAR":"03","APR":"04","MAY":"05","JUN":"06",
+                     "JUL":"07","AUG":"08","SEP":"09","OCT":"10","NOV":"11","DEC":"12" };
+    const month = months[monthAbbr] || "01";
+    return `${year}-${month}-${day}`;
+  };
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const endpoints = [
+          { name: "ward", request: apiClient.get("/dropdowns/wards?ulbid=4") },
+          { name: "type", request: apiClient.get("/dropdowns/services?ulbId=4") },
+          { name: "officer", request: apiClient.get("/dropdowns/users?ulbid=4") },
+          { name: "status", request: apiClient.get("/dropdowns/getStatusDropdown?ulbId=4") },
+        ];
+
+        const results = await Promise.allSettled(endpoints.map((e) => e.request));
+
+        results.forEach((result, index) => {
+          const endpointName = endpoints[index].name;
+          if (result.status === "fulfilled" && result.value?.success) {
+            const response = result.value;
+            if (endpointName === "ward" && response.data?.rows) {
+              setWardOptions(response.data.rows.map((w) => ({ label: w.WARDNAME, value: w.WARDID })));
+            } else if (endpointName === "type" && response.data?.rows) {
+              setTypeOptions(response.data.rows.map((s) => ({ label: s.VAR_SERVICE_ENG_NAME, value: s.NUM_SERVICE_SERVICEID })));
+            } else if (endpointName === "officer" && response.data?.rows) {
+              setOfficerOptions(response.data.rows.map((u) => ({ label: u.VAR_USER_USERNAME, value: u.VAR_USER_USERNAME })));
+            } else if (endpointName === "status" && Array.isArray(response.data)) {
+              setStatusOptions(response.data.map((s) => ({ label: s.STATUS, value: s.STATUS })));
+            } else {
+              if (endpointName === "ward") setWardOptions([]);
+              if (endpointName === "type") setTypeOptions([]);
+              if (endpointName === "officer") setOfficerOptions([]);
+              if (endpointName === "status") setStatusOptions([]);
+            }
+          } else {
+            if (endpointName === "ward") setWardOptions([]);
+            if (endpointName === "type") setTypeOptions([]);
+            if (endpointName === "officer") setOfficerOptions([]);
+            if (endpointName === "status") setStatusOptions([]);
+          }
+        });
+      } catch (error) {
+        console.error(error);
+        setWardOptions([]);
+        setTypeOptions([]);
+        setOfficerOptions([]);
+        setStatusOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDropdowns();
+  }, []);
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target; // value is YYYY-MM-DD
+    // Convert to DD-MMM-YYYY
+    if (value) {
+      const [year, month, day] = value.split("-");
+      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const formatted = `${day}-${months[parseInt(month,10)-1]}-${year}`;
+      onFilterChange({ ...filters, [name]: formatted });
+    } else {
+      onFilterChange({ ...filters, [name]: "" });
+    }
+  };
+
+  const handleSelectChange = (e) => {
+    const { name, value } = e.target;
+    onFilterChange({ ...filters, [name]: value });
+  };
+
   const handleReset = () => {
-    setFormData({
-      date: "01/04/2025 - 25/05/2025",
-      ward: "सर्व",
-      department: "सर्व",
-      type: "सर्व",
-      office: "सर्व",
-      officer: "सर्व",
-      status: "सर्व",
+    onFilterChange({
+      fromDate: "",
+      toDate: "",
+      ward: "",
+      department: "",
+      type: "",
+      officer: "",
+      status: "",
     });
   };
 
+  if (loading) return <div className="filter-bar">Loading filters...</div>;
+
   return (
     <form className="filter-bar">
-      {/* दिनांक */}
+      {/* From Date */}
       <div className="filter-group">
-        <label className="filter-label">दिनांक</label>
-        <select
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
+        <label className="filter-label">From</label>
+        <input
+          type="date"
+          name="fromDate"
+          value={toDateInputValue(filters.fromDate)}
+          onChange={handleDateChange}
           className="filter-select"
-        >
-          {dateOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        />
+      </div>
+
+      {/* To Date */}
+      <div className="filter-group">
+        <label className="filter-label">To</label>
+        <input
+          type="date"
+          name="toDate"
+          value={toDateInputValue(filters.toDate)}
+          onChange={handleDateChange}
+          className="filter-select"
+        />
       </div>
 
       {/* विभाग */}
       <div className="filter-group">
         <label className="filter-label">विभाग</label>
-        <select
-          name="department"
-          value={formData.department}
-          onChange={handleChange}
-          className="filter-select"
-        >
-          {departmentOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+        <select name="department" value={filters.department} onChange={handleSelectChange} className="filter-select">
+          <option value="">-- Select Department --</option>
+          {wardOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
 
-       {/* सेवा प्रकार */}
+      {/* सेवा प्रकार */}
       <div className="filter-group">
         <label className="filter-label">सेवा प्रकार</label>
-        <select
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="type" value={filters.type} onChange={handleSelectChange} className="filter-select">
+          <option value="">-- Select Type --</option>
           {typeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
@@ -131,54 +165,19 @@ export default function FilterBar() {
       {/* प्रभाग */}
       <div className="filter-group">
         <label className="filter-label">प्रभाग</label>
-        <select
-          name="ward"
-          value={formData.ward}
-          onChange={handleChange}
-          className="filter-select"
-        >
-          {wardOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+        <select name="ward" value={filters.ward} onChange={handleSelectChange} className="filter-select">
+          <option value="">-- Select Ward --</option>
+          <option value="Ho">HO</option>
         </select>
       </div>
-
-      
-
-     
-
-      {/* कार्यालय */}
-      {/* <div className="filter-group">
-        <label className="filter-label">कार्यालय</label>
-        <select
-          name="office"
-          value={formData.office}
-          onChange={handleChange}
-          className="filter-select"
-        >
-          {officeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div> */}
 
       {/* अधिकारी */}
       <div className="filter-group">
         <label className="filter-label">अधिकारी</label>
-        <select
-          name="officer"
-          value={formData.officer}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="officer" value={filters.officer} onChange={handleSelectChange} className="filter-select">
+          <option value="">-- Select Officer --</option>
           {officerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>
@@ -186,16 +185,10 @@ export default function FilterBar() {
       {/* Status */}
       <div className="filter-group">
         <label className="filter-label">Status</label>
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className="filter-select"
-        >
+        <select name="status" value={filters.status} onChange={handleSelectChange} className="filter-select">
+          <option value="">-- Select Status --</option>
           {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>

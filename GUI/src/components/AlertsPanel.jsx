@@ -1,36 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Bell, AlertCircle, Clock, FileX, CheckCircle } from "lucide-react";
-
-const data = [
-  {
-    type: "danger",
-    Icon: AlertCircle,
-    title: "गंभीर (15+ दिवस)",
-    subtitle: "15 दिवसांपेक्षा जास्त प्रलंबित अर्ज",
-    value: "252",
-  },
-  {
-    type: "warn",
-    Icon: Clock,
-    title: "कालमर्यादा संपत आलेले (4-15 दिवस)",
-    subtitle: "लवकर कार्यवाही अपेक्षित",
-    value: "3,143",
-  },
-  {
-    type: "info",
-    Icon: FileX,
-    title: "अपूर्ण कागदपत्रे",
-    subtitle: "नागरिकांकडून कागदपत्रे प्रलंबित",
-    value: "1,028",
-  },
-  {
-    type: "success",
-    Icon: CheckCircle,
-    title: "वेळेत पूर्ण झालेल्या सेवा",
-    subtitle: "यशस्वीरित्या पूर्ण सेवा",
-    value: "40,215",
-  },
-];
+import apiClient from "../services/apiClient";
 
 const colorMap = {
   danger: { bg: "#fee2e2", color: "#ef4444" },
@@ -40,6 +10,74 @@ const colorMap = {
 };
 
 export default function AlertsPanel() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [alertsData, setAlertsData] = useState({
+    critical: 0,     
+    warning: 0,      
+    approved: 0,     
+  });
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await apiClient.get("/rts-dashboard/getAlerts?ulbId=4");
+        if (response.success && response.data) {
+          const pendingBuckets = response.data.pendingBuckets || [];
+          const approved = response.data.approvedApplications || 0;
+
+          let critical = 0;
+          let warning = 0;
+          pendingBuckets.forEach((bucket) => {
+            if (bucket.DAYS_BUCKET === "15+ days") {
+              critical = bucket.PENDING_APPLICATIONS || 0;
+            } else if (bucket.DAYS_BUCKET === "4-15 days") {
+              warning = bucket.PENDING_APPLICATIONS || 0;
+            }
+          });
+
+          setAlertsData({ critical, warning, approved });
+        } else {
+          throw new Error(response.message || "Invalid data");
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+  }, []);
+
+  if (loading) return <div className="card">Loading alerts...</div>;
+  if (error) return <div className="card">Error: {error}</div>;
+
+  const alertItems = [
+    {
+      type: "danger",
+      Icon: AlertCircle,
+      title: "गंभीर (15+ दिवस)",
+      subtitle: "15 दिवसांपेक्षा जास्त प्रलंबित अर्ज",
+      value: alertsData.critical.toLocaleString("en-IN"),
+    },
+    {
+      type: "warn",
+      Icon: Clock,
+      title: "कालमर्यादा संपत आलेले (4-15 दिवस)",
+      subtitle: "लवकर कारवाही अपेक्षित",
+      value: alertsData.warning.toLocaleString("en-IN"),
+    },
+    {
+      type: "success",
+      Icon: CheckCircle,
+      title: "वेळेत पूर्ण झालेल्या सेवा",
+      subtitle: "यशस्वीरित्या पूर्ण सेवा",
+      value: alertsData.approved.toLocaleString("en-IN"),
+    },
+  ];
+
   return (
     <div className="card">
       <h3 className="card-title">
@@ -51,7 +89,7 @@ export default function AlertsPanel() {
         सूचना / Alerts
       </h3>
       <div className="alerts-list">
-        {data.map((a, i) => {
+        {alertItems.map((a, i) => {
           const { bg, color } = colorMap[a.type];
           return (
             <div className="alert-row" key={i}>

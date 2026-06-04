@@ -1,42 +1,73 @@
-import React from 'react';
-import { officesTop10 } from '../data/dummyData';
+import React, { useState, useEffect } from "react";
+import apiClient from "../services/apiClient";
+import DataTable from "./DataTable";
 
-export default function OfficesTable() {
+const OfficesTable = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [officersData, setOfficersData] = useState([]);
+
+  useEffect(() => {
+    const fetchOfficers = async () => {
+      try {
+        const response = await apiClient.get("/rts-dashboard/getOfficerWork");
+        if (response.success && Array.isArray(response.data)) {
+          const data = response.data.map((item) => ({
+            OFFICER_NAME: item.OFFICER_NAME,
+            TOTAL_APPLICATIONS: item.TOTAL_APPLICATIONS,
+            APPROVED_APPLICATIONS: item.APPROVED_APPLICATIONS,
+            PENDING_APPLICATIONS: item.PENDING_APPLICATIONS,
+            DELAYED_APPLICATIONS: item.DELAYED_APPLICATIONS,
+          }));
+
+          setOfficersData(data); 
+        } else {
+          throw new Error(response.message || "Invalid data format");
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOfficers();
+  }, []);
+
+  if (loading) return <div className="card">Loading officers data...</div>;
+  if (error) return <div className="card">Error: {error}</div>;
+
+  const headers = [
+    { label: "अधिकारी नाव", align: "left" },
+    { label: "नियुक्त", align: "right" },
+    { label: "निकाली", align: "right" },
+    { label: "प्रलंबित", align: "right" },
+    { label: "विलंबित", align: "right" },
+  ];
+
+  const keyMapping = {
+    "अधिकारी नाव": "OFFICER_NAME",
+    नियुक्त: "TOTAL_APPLICATIONS",
+    निकाली: "APPROVED_APPLICATIONS",
+    प्रलंबित: "PENDING_APPLICATIONS",
+    विलंबित: "DELAYED_APPLICATIONS",
+  };
+
   return (
     <div className="card">
       <h3 className="card-title">
-        अधिकारी कामगिरी (Top 10)
+        अधिकारी कामगिरी
         <span className="view">View All Officers ›</span>
       </h3>
-      <table className="table">
-        <colgroup>
-          <col style={{ width: '34%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '18%' }} />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>अधिकारी नाव</th>
-            <th className="num">नियुक्त</th>
-            <th className="num">निकाली</th>
-            <th className="num">प्रलंबित</th>
-            <th className="num">विलंबित</th>
-          </tr>
-        </thead>
-        <tbody>
-          {officesTop10.map((r, i) => (
-            <tr key={i}>
-              <td>{i + 1}. {r.office}</td>
-              <td className="num">{r.received.toLocaleString('en-IN')}</td>
-              <td className="num">{r.disposed.toLocaleString('en-IN')}</td>
-              <td className="num">{r.pending.toLocaleString('en-IN')}</td>
-              <td className="num" style={{ color: '#16a34a', fontWeight: 600 }}>{r.ontime}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        headers={headers}
+        data={officersData}
+        keyMapping={keyMapping}
+        rowLimit={7}
+      />
     </div>
   );
-}
+};
+
+export default OfficesTable;

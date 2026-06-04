@@ -1,23 +1,61 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { onTime } from "../data/dummyData";
-
-const pieData = [
-  { name: "वेळेत निकाली", value: 40215, pct: "82.43%", color: "#16a34a" },
-  { name: "विलंबित", value: 8537, pct: "17.57%", color: "#ef4444" },
-];
+import apiClient from "../services/apiClient";
 
 export default function OnTimeGauge() {
+  const [approved, setApproved] = useState(0);
+  const [pending, setPending] = useState(0);
+  const [approvedPct, setApprovedPct] = useState("0.00");
+  const [pendingPct, setPendingPct] = useState("0.00");
+
+  const fetchSummary = async () => {
+    try {
+      const response = await apiClient.get(
+        "/rts-dashboard/applicationStatusSummary",
+      );
+      if (response.success) {
+        const apr = Number(response.data.APPROVED_APPLICATIONS || 0);
+        const pend = Number(response.data.PENDING_APPLICATIONS || 0);
+        const total = apr + pend;
+        setApproved(apr);
+        setPending(pend);
+        setApprovedPct(total > 0 ? ((apr / total) * 100).toFixed(2) : "0.00");
+        setPendingPct(total > 0 ? ((pend / total) * 100).toFixed(2) : "0.00");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
   const gaugeData = [
-    { name: "वेळेत", value: onTime.onTimePct, color: "#22a06b" },
-    { name: "विलंबित", value: onTime.delayedPct, color: "#e23b3b" },
+    { name: "वेळेत", value: parseFloat(approvedPct), color: "#22a06b" },
+    { name: "विलंबित", value: parseFloat(pendingPct), color: "#e23b3b" },
+  ];
+
+  const pieData = [
+    {
+      name: "वेळेत निकाली",
+      value: approved,
+      pct: `${approvedPct}%`,
+      color: "#16a34a",
+    },
+    {
+      name: "विलंबित",
+      value: pending,
+      pct: `${pendingPct}%`,
+      color: "#ef4444",
+    },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+      {/* Half donut gauge */}
       <div className="card">
         <h3 className="card-title">वेळेत सेवा वितरण</h3>
-        {/* Semicircle gauge */}
         <div className="gauge-wrap">
           <ResponsiveContainer width="100%" height={140}>
             <PieChart>
@@ -44,7 +82,7 @@ export default function OnTimeGauge() {
           </div>
           <div className="gauge-center">
             <div className="big" style={{ color: "#16a34a" }}>
-              {onTime.onTimePct}%
+              {approvedPct}%
             </div>
           </div>
         </div>

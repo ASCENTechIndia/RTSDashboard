@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { kpiCards } from "../data/dummyData";
 import {
-  FileText, // doc
-  Check, // check
-  Clock, // clock
-  AlertCircle, // alert
-  Target, // target
-  Award, // badge
-  File, // file
-  Settings, // gear
+  FileText,
+  Check,
+  Clock,
+  AlertCircle,
+  Target,
+  Award,
+  File,
+  Settings,
 } from "lucide-react";
 import apiClient from "../services/apiClient";
 
-// Map your icon keys to Lucide components
 const iconComponents = {
   doc: FileText,
   check: Check,
@@ -24,40 +22,119 @@ const iconComponents = {
   gear: Settings,
 };
 
-export default function KpiRow() {
-
+export default function KpiRow({ filters }) {
   const [kpiCards, setKpiCards] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchCardsData = async () => {
+    setLoading(true);
     try {
-      const response = await apiClient.get(`/rts-dashboard/counts`);
-      if (response.success) {
-        const updatedCards = [
-          { id: 'total', icon: 'doc', label: 'एकूण प्राप्त अर्ज', value: `${response?.data?.total_applications || 0}`, color: '#2f7be3' },
-          { id: 'disposed', icon: 'check', label: 'निकाली अर्ज', value: `${response?.data?.approved_applications || 0}`, color: '#22a06b' },
-          { id: 'pending', icon: 'clock', label: 'प्रलंबित अर्ज', value: `${response?.data?.pending_applications || 0}`, color: '#ee8f1a' },
-          { id: 'delayed', icon: 'alert', label: 'विलंबित प्रकरणे', value: `${response?.data?.delayed_applications || 0}`, color: '#e23b3b' },
-          { id: 'ontime', icon: 'target', label: 'वेळेत निकाली (%)', value: `${response?.data?.approved_percentage || 0}%`, color: '#16a34a' },
-          { id: 'e6', icon: 'badge', label: 'आज प्राप्त अर्ज', value: `${response?.data?.todays_applications || 0}`, color: '#f0a020' },
-          { id: 'e7', icon: 'file', label: 'आज निकाली अर्ज', value: `${response?.data?.todays_approved || 0}`, color: '#7c3aed' },
-          { id: 'rts', icon: 'gear', label: 'RTS तक्रारी', value: '0', color: '#0ea5a5' }
-        ]
+      // 1. Fetch counts with filters
+      const params = new URLSearchParams();
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.ward) params.append("wardName", filters.ward);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("serviceName", filters.type);
+      if (filters.officer) params.append("officerName", filters.officer);
 
+      const queryString = params.toString();
+      const countsEndpoint = `/rts-dashboard/counts${queryString ? `?${queryString}` : ""}`;
+      const countsResponse = await apiClient.get(countsEndpoint);
+
+      // 2. Fetch RTS complaints (no filters needed)
+      let rtsValue = 0;
+      try {
+        const rtsResponse = await apiClient.get("/rts-dashboard/getRTSComplaints");
+        if (rtsResponse.success && rtsResponse.data && rtsResponse.data[0]) {
+          rtsValue = rtsResponse.data[0].RTS_COMPLAINTS || 0;
+        }
+      } catch (rtsErr) {
+        console.error("Error fetching RTS complaints:", rtsErr);
+      }
+
+      if (countsResponse.success && countsResponse.data) {
+        const d = countsResponse.data;
+        const getCount = (arr) => (arr && arr[0]?.CNT) || 0;
+
+        const updatedCards = [
+          {
+            id: "total",
+            icon: "doc",
+            label: "एकूण प्राप्त अर्ज",
+            value: getCount(d.total_applications),
+            color: "#2f7be3",
+          },
+          {
+            id: "disposed",
+            icon: "check",
+            label: "निकाली अर्ज",
+            value: getCount(d.approved_applications),
+            color: "#22a06b",
+          },
+          {
+            id: "pending",
+            icon: "clock",
+            label: "प्रलंबित अर्ज",
+            value: getCount(d.pending_applications),
+            color: "#ee8f1a",
+          },
+          {
+            id: "delayed",
+            icon: "alert",
+            label: "विलंबित प्रकरणे",
+            value: getCount(d.delayed_applications),
+            color: "#e23b3b",
+          },
+          {
+            id: "ontime",
+            icon: "target",
+            label: "वेळेत निकाली (%)",
+            value: `${getCount(d.approved_percentage)}%`,
+            color: "#16a34a",
+          },
+          {
+            id: "todayReceived",
+            icon: "badge",
+            label: "आज प्राप्त अर्ज",
+            value: d.todays_applications ?? 0,
+            color: "#f0a020",
+          },
+          {
+            id: "todayDisposed",
+            icon: "file",
+            label: "आज निकाली अर्ज",
+            value: d.todays_approved ?? 0,
+            color: "#7c3aed",
+          },
+          {
+            id: "rts",
+            icon: "gear",
+            label: "RTS तक्रारी",
+            value: rtsValue,
+            color: "#0ea5a5",
+          },
+        ];
         setKpiCards(updatedCards);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching KPI data:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchCardsData();
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  if (loading) return <div className="kpi-row">Loading KPI data...</div>;
 
   return (
     <div className="kpi-row">
       {kpiCards.map((k) => {
-        const IconComponent = iconComponents[k.icon] || FileText; // fallback
+        const IconComponent = iconComponents[k.icon] || FileText;
         return (
           <div key={k.id} className="kpi" style={{ "--kpi-color": k.color }}>
             <div className="kpi-top">

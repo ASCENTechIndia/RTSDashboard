@@ -3,13 +3,26 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { monthlyTrend } from '../data/dummyData';
 import apiClient from '../services/apiClient';
 
-export default function MonthlyTrendChart() {
+export default function MonthlyTrendChart({ filters }) {
   const [monthlyTrendChartData, setMonthlyTrendChartData] = useState([]);
 
   const fetchTrendChartData = async () => {
     try {
-      const response = await apiClient.get(`/rts-dashboard/monthwiseApplicationTrend`);
 
+      const params = new URLSearchParams();
+      if (filters?.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters?.toDate) params.append("toDate", filters.toDate);
+      if (filters?.department) params.append("wardName", filters.department);
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.type) params.append("serviceName", filters.type);
+      if (filters?.officer) params.append("officerName", filters.officer);
+
+      const queryString = params.toString();
+      const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
+
+      const response = await apiClient.get(monthTrendUrl);
+      console.log(response);
+return;
       if (response.success && response.data.length > 0) {
         const updatedChartData = response.data.map(item => ({
           month: item.MONTHS,

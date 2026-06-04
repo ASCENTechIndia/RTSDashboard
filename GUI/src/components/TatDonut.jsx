@@ -19,30 +19,25 @@ export default function TatDonut({ filters }) {
   const fetchTATData = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.fromDate) params.append("fromDate", filters.fromDate);
-      if (filters.toDate) params.append("toDate", filters.toDate);
-      if (filters.department) params.append("wardName", filters.department);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.type) params.append("serviceName", filters.type);
-      if (filters.officer) params.append("officerName", filters.officer);
+      if (filters?.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters?.toDate) params.append("toDate", filters.toDate);
+      if (filters?.department) params.append("wardName", filters.department);
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.type) params.append("serviceName", filters.type);
+      if (filters?.officer) params.append("officerName", filters.officer);
 
       const queryString = params.toString();
       const tatUrl = `/rts-dashboard/tatWisePending${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
-      console.log(tatUrl);
-      return;
-      
       const response = await apiClient.get(tatUrl);
-      console.log(response);
-      return;
 
-      if (response.success) {
-        const total = response.data.reduce((sum, row) => sum += Number(row.PENDING_APPLICATIONS || 0), 0)
-        const updatedData = response.data.map((item, idx) => ({
+      if (response?.success) {
+        const total = response?.data?.totalPending;
+        const updatedData = response?.data?.buckets.map((item, idx) => ({
           name: item?.DAYS_BUCKET,
-          value: item?.PENDING_APPLICATIONS,
+          value: item?.PENDING_COUNT,
           color: colors[idx % colors.length],
-          pct: String(((item.PENDING_APPLICATIONS / total) * 100).toFixed(2)) + "%"
+          pct: String(item?.PERCENTAGE) + "%"
         }));
         setTatTotal(total);
         setTatData(updatedData);
@@ -53,8 +48,8 @@ export default function TatDonut({ filters }) {
   }
 
   useEffect(() => {
-    fetchTATData();
-  }, [])
+    if (filters) fetchTATData();
+  }, [filters])
 
   return (
     <div className="card">
@@ -97,14 +92,14 @@ export default function TatDonut({ filters }) {
                 className=""
                 style={{ display: "flex", alignItems: "center", gap: "5px" }}
               >
-                <span className="dot" style={{ background: d.color }} />
-                <span className="name">{d.name}</span>
+                <span className="dot" style={{ background: d?.color }} />
+                <span className="name">{d?.name}</span>
               </div>
               <div
                 style={{ display: "flex", flexDirection: "column", flex: 1 }}
               >
                 <span className="val" style={{ fontSize: "9px" }}>
-                  {d.value.toLocaleString("en-IN")} ({d.pct})
+                  {d?.value?.toLocaleString("en-IN")} ({d?.pct})
                 </span>
               </div>
             </div>

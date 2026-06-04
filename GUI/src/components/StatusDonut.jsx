@@ -8,43 +8,43 @@ export default function StatusDonut() {
   const [statusTotal, setStatusTotal] = useState("");
 
   const fetchStatusChartData = async () => {
-    try {
-      const response = await apiClient.get(`/rts-dashboard/detailedApplicationStatus`);
+    // try {
+    //   const response = await apiClient.get(`/rts-dashboard/detailedApplicationStatus`);
 
-      if (response.success) {
-        const total1 = Object.values(response.data).reduce((sum, row) => sum += row, 0);
-        const updatedData = [
-          { 
-            name: "Approved",
-            value: response.data.APPROVED_APPLICATIONS,
-            color: '#22a06b',
-            pct: String(((response.data.APPROVED_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
-          },
-          { 
-            name: "Pending",
-            value: response.data.PENDING_APPLICATIONS,
-            color: '#f4b400',
-            pct: String(((response.data.PENDING_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
-          },
-          { 
-            name: "Others",
-            value: response.data.OTHERS_APPLICATIONS,
-            color: '#ee8f1a',
-            pct: String(((response.data.OTHERS_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
-          },
-          { 
-            name: "Rejected",
-            value: response.data.REJECT_APPLICATIONS,
-            color: '#e23b3b',
-            pct: String(((response.data.REJECT_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
-          },
-        ];
-        setStatusTotal(total1);
-        setStatusChartData(updatedData);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+    //   if (response.success) {
+    //     const total1 = Object.values(response.data).reduce((sum, row) => sum += row, 0);
+    //     const updatedData = [
+    //       { 
+    //         name: "Approved",
+    //         value: response.data.APPROVED_APPLICATIONS,
+    //         color: '#22a06b',
+    //         pct: String(((response.data.APPROVED_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+    //       },
+    //       { 
+    //         name: "Pending",
+    //         value: response.data.PENDING_APPLICATIONS,
+    //         color: '#f4b400',
+    //         pct: String(((response.data.PENDING_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+    //       },
+    //       { 
+    //         name: "Others",
+    //         value: response.data.OTHERS_APPLICATIONS,
+    //         color: '#ee8f1a',
+    //         pct: String(((response.data.OTHERS_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+    //       },
+    //       { 
+    //         name: "Rejected",
+    //         value: response.data.REJECT_APPLICATIONS,
+    //         color: '#e23b3b',
+    //         pct: String(((response.data.REJECT_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+    //       },
+    //     ];
+    //     setStatusTotal(total1);
+    //     setStatusChartData(updatedData);
+    //   }
+    // } catch (error) {
+    //   console.error(error);
+    // }
   };
 
   useEffect(() => {

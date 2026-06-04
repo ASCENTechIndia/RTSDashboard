@@ -1,6 +1,6 @@
 const oracledb = require('oracledb');
 const { config } = require('../config/env');
-const { initDB, getConnection: getDbConnection, closeDBPools } = require('../config/db');
+const { initDB, getConnection: getDbConnection, closeDBPool } = require('../config/db');
 const { logger } = require('../utils/logger');
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
@@ -28,7 +28,7 @@ async function getConnection(executionContext = {}, options = {}) {
 }
 
 async function closeOraclePool() {
-  await closeDBPools();
+  await closeDBPool();
   logger.info('Oracle pools closed');
 }
 

@@ -86,8 +86,15 @@ async function servicePrabhagwiseApplications(){
   return repoPrabhagwiseApplications();
 }
 
-async function serviceCommissionerSummary(){
-  return repoCommissionerSummary();
+async function serviceCommissionerSummary(filters = {}) {
+  return repoCommissionerSummary(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function serviceAlerts(ulbId){

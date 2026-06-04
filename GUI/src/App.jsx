@@ -30,7 +30,6 @@ export default function App() {
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    console.log("Filters changed:", newFilters);
   };
 
   return (
@@ -44,16 +43,16 @@ export default function App() {
 
           {/* Row 1 — Dept Table | TAT donut | OnTime gauge | Alerts */}
           <div className="grid-table">
-            <DepartmentTable />
-            {/* <TatDonut /> */}
+            <DepartmentTable filters={filters} />
+            <TatDonut filters={filters}/>
             <OnTimeGauge filters={filters} />
             <AlertsPanel />
           </div>
 
           {/* Row 2 — Monthly trend | Status donut | Top services | Complaints */}
           <div className="grid-4">
-            <MonthlyTrendChart />
-            {/* <StatusDonut /> */}
+            <MonthlyTrendChart filters={filters}/>
+            <StatusDonut filters={filters}/>
             <TopServicesBar filters={filters}/>
             <ComplaintsList />
           </div>

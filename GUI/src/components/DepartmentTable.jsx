@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { departmentRows } from "../data/dummyData";
 import {
   BookOpen,
   Landmark,
@@ -13,19 +12,10 @@ import {
   ShoppingCart,
   Hotel,
   HandHeart,
-  Flame
+  Flame,
 } from "lucide-react";
 import apiClient from "../services/apiClient";
-
-const iconMap = {
-  bookopen: BookOpen,
-  landmark: Landmark,
-  clipboardcheck: ClipboardCheck,
-  heartpulse: HeartPulse,
-  droplets: Droplets,
-  layoutgrid: LayoutGrid,
-  barchart: BarChart2,
-};
+import { useLoader } from "../context/LoaderContext";
 
 const newIconMap = {
   landmark: Landmark,
@@ -39,16 +29,28 @@ const newIconMap = {
   handheart: HandHeart,
   flame: Flame,
   droplets: Droplets,
-}
+};
 
-export default function DepartmentTable() {
-
+export default function DepartmentTable({ filters }) {
+  const { setLoader } = useLoader();
   const [departmentWiseData, setDepartmentWiseData] = useState([]);
 
   const fetchDepartmentWiseData = async () => {
+    setLoader(true);
     try {
-      const response = await apiClient.get(`/rts-dashboard/deptWiseApplications`);
+      const params = new URLSearchParams();
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.ward) params.append("wardName", filters.ward);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("serviceName", filters.type);
+      if (filters.officer) params.append("officerName", filters.officer);
 
+      const queryString = params.toString();
+      const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;
+
+      const response = await apiClient.get(endpoint);
+      console.log("depat res :", response);
       if (response.success && response.data.length > 0) {
         const iconkeys = Object.keys(newIconMap);
         const DeptRows = response.data.map((item, idx) => ({
@@ -57,9 +59,8 @@ export default function DepartmentTable() {
           disposed: item?.APPROVED_APPLICATIONS,
           pending: item?.PENDING_APPLICATIONS,
           ontime: item?.APPROVED_PERCENTAGE,
-          icon: iconkeys[idx % iconkeys.length]
+          icon: iconkeys[idx % iconkeys.length],
         }));
-
 
         const totals = DeptRows.reduce(
           (acc, row) => {
@@ -74,7 +75,7 @@ export default function DepartmentTable() {
             disposed: 0,
             pending: 0,
             ontimeSum: 0,
-          }
+          },
         );
 
         const totalRow = {
@@ -86,22 +87,29 @@ export default function DepartmentTable() {
           isTotal: true,
         };
         setDepartmentWiseData([...DeptRows, totalRow]);
+      } else {
+        setDepartmentWiseData([]);
       }
     } catch (error) {
+      setDepartmentWiseData([]);
       console.error(error);
+    } finally {
+      setLoader(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchDepartmentWiseData();
-  }, []);
-
+  }, [filters]);
 
   return (
     <div className="card">
       <h3 className="card-title">विभागनिहाय RTS कामगिरी</h3>
       <div style={{ maxHeight: "270px", overflowY: "auto" }}>
-        <table className="table" style={{ borderCollapse: "collapse", overflowY: "auto" }}>
+        <table
+          className="table"
+          style={{ borderCollapse: "collapse", overflowY: "auto" }}
+        >
           <colgroup>
             <col style={{ width: "32%" }} />
             <col style={{ width: "14%" }} />
@@ -155,7 +163,9 @@ export default function DepartmentTable() {
                         justifyContent: "flex-end",
                       }}
                     >
-                      <span style={{ minWidth: 36 }}>{r.ontime.toFixed(2)}%</span>
+                      <span style={{ minWidth: 36 }}>
+                        {r.ontime.toFixed(2)}%
+                      </span>
                       <div className="bar-bg" style={{ flex: 1, maxWidth: 50 }}>
                         <div
                           className="bar-fill"

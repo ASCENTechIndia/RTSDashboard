@@ -34,9 +34,11 @@ const OfficesTable = ({ filters }) => {
           }));
           setOfficersData(data);
         } else {
+          setOfficersData([]);
           throw new Error(response.message || "Invalid data format");
         }
       } catch (err) {
+        setOfficersData([]);
         console.error(err);
         setError(err.message);
       } finally {

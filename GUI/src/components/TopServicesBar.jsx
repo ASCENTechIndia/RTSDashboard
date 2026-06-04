@@ -37,8 +37,11 @@ export default function TopServicesBar({ filters }) {
           rank: item.RANK_NO,
         }));
         setServiceBarData(updatedData);
+      } else {
+        setServiceBarData([]);
       }
     } catch (error) {
+      setServiceBarData([]);
       console.error("Error fetching top services data:", error);
     } finally {
       setLoader(false);

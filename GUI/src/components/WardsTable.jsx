@@ -26,7 +26,7 @@ const WardsTable = ({ filters }) => {
         const response = await apiClient.get(endpoint);
         if (response.success && Array.isArray(response.data)) {
           const data = response.data.map((item) => ({
-            WARDNAME: item.PRABHAG_NM, 
+            WARDNAME: item.PRABHAG_NM,
             TOTAL_APPLICATIONS: item.TOTAL_APPLICATIONS,
             APPROVED_APPLICATIONS: item.APPROVED_APPLICATIONS,
             PENDING_APPLICATIONS: item.PENDING_APPLICATIONS,
@@ -34,9 +34,10 @@ const WardsTable = ({ filters }) => {
           }));
           setWardsData(data);
         } else {
-          throw new Error(response.message || "Data not available");
+          setWardsData([]);
         }
       } catch (err) {
+        setWardsData([]);
         console.error(err);
         setError(err.message);
       } finally {

@@ -38,8 +38,17 @@ export default function OnTimeGauge({ filters }) {
         setPending(pend);
         setApprovedPct(total > 0 ? ((apr / total) * 100).toFixed(2) : "0.00");
         setPendingPct(total > 0 ? ((pend / total) * 100).toFixed(2) : "0.00");
+      } else {
+        setApproved(0);
+        setPending(0);
+        setApprovedPct(0);
+        setPendingPct(0);
       }
     } catch (error) {
+      setApproved(0);
+      setPending(0);
+      setApprovedPct(0);
+      setPendingPct(0);
       console.error(error);
     } finally {
       setLoader(false);

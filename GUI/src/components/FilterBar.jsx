@@ -154,7 +154,7 @@ export default function FilterBar({ filters, onFilterChange }) {
       {/* सेवा प्रकार */}
       <div className="filter-group">
         <label className="filter-label">सेवा प्रकार</label>
-        <select name="type" value={filters.type} onChange={handleSelectChange} className="filter-select">
+        <select name="type" value={filters.type} onChange={handleSelectChange} className="filter-select" style={{width: "250px"}}>
           <option value="">-- Select Type --</option>
           {typeOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>

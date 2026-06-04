@@ -50,7 +50,6 @@ export default function DepartmentTable({ filters }) {
       const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;
 
       const response = await apiClient.get(endpoint);
-      console.log("depat res :", response);
       if (response.success && response.data.length > 0) {
         const iconkeys = Object.keys(newIconMap);
         const DeptRows = response.data.map((item, idx) => ({

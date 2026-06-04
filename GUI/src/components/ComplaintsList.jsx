@@ -17,13 +17,13 @@ export default function ComplaintsList() {
           const items = [
             {
               icon: "👥",
-              label: "एकूण तक्रारी",
+              label: "प्राप्त तक्रारी",
               value: data.TOTAL_COMPLAINTS || "",
               color: "#2f7be3",
             },
             {
               icon: "✓",
-              label: "निकाली तक्रारी",
+              label: "निवारण झाल्या",
               value: data.RESOLVED_COMPLAINTS || "",
               color: "#22a06b",
             },
@@ -35,7 +35,7 @@ export default function ComplaintsList() {
             },
             {
               icon: "✓",
-              label: "निकाली दर (%)",
+              label: "निवारण टक्केवारी (%)",
               value: `${data.RESOLVED_PERCENTAGE || ""}%`,
               color: "#0ea5a5",
             },

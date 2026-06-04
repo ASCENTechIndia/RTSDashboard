@@ -52,7 +52,7 @@ const WardsTable = ({ filters }) => {
 
   const headers = [
     { label: "प्रभाग", align: "left" },
-    { label: "प्राप्त", align: "right" },
+    { label: "प्राप्त अर्ज", align: "right" },
     { label: "निकाली", align: "right" },
     { label: "प्रलंबित", align: "right" },
     { label: "वेळेत (%)", align: "right" },
@@ -60,7 +60,7 @@ const WardsTable = ({ filters }) => {
 
   const keyMapping = {
     प्रभाग: "WARDNAME",
-    प्राप्त: "TOTAL_APPLICATIONS",
+    "प्राप्त अर्ज": "TOTAL_APPLICATIONS",
     निकाली: "APPROVED_APPLICATIONS",
     प्रलंबित: "PENDING_APPLICATIONS",
     "वेळेत (%)": "APPROVED_PERCENTAGE",

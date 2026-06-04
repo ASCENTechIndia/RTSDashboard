@@ -45,7 +45,10 @@ export default function MonthlyTrendChart({ filters }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">मासिक अर्ज ट्रेंड</h3>
+      <h3 className="card-title" style={{ 
+        fontFamily: "Mangal",
+        fontSize: "11px",
+      }}>मासिक अर्ज ट्रेंड</h3>
       <div style={{ flex: 1 }}>
         <ResponsiveContainer>
           <LineChart data={monthlyTrendChartData} margin={{ top: 5, right: 8, left: -10, bottom: 0 }}>

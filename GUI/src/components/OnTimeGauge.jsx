@@ -1,21 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
-export default function OnTimeGauge() {
+export default function OnTimeGauge({ filters }) {
+  const { setLoader } = useLoader();
   const [approved, setApproved] = useState(0);
   const [pending, setPending] = useState(0);
   const [approvedPct, setApprovedPct] = useState("0.00");
   const [pendingPct, setPendingPct] = useState("0.00");
 
   const fetchSummary = async () => {
+    setLoader(true);
     try {
-      const response = await apiClient.get(
-        "/rts-dashboard/applicationStatusSummary",
-      );
+      const params = new URLSearchParams();
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.ward) params.append("wardName", filters.ward);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("serviceName", filters.type);
+      if (filters.officer) params.append("officerName", filters.officer);
+
+      const queryString = params.toString();
+      const endpoint = `/rts-dashboard/applicationStatusSummary${queryString ? `?${queryString}` : ""}`;
+
+      const response = await apiClient.get(endpoint);
+
       if (response.success) {
-        const apr = Number(response.data.APPROVED_APPLICATIONS || 0);
-        const pend = Number(response.data.PENDING_APPLICATIONS || 0);
+        const apr = Number(
+          response.data.resolved_pending.approved_applications || 0,
+        );
+        const pend = Number(
+          response.data.resolved_pending.pending_applications || 0,
+        );
         const total = apr + pend;
         setApproved(apr);
         setPending(pend);
@@ -24,12 +41,14 @@ export default function OnTimeGauge() {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoader(false);
     }
   };
 
   useEffect(() => {
     fetchSummary();
-  }, []);
+  }, [filters]);
 
   const gaugeData = [
     { name: "वेळेत", value: parseFloat(approvedPct), color: "#22a06b" },

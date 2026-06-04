@@ -1,17 +1,28 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
-export default function CommissionerSummary() {
-  const [loading, setLoading] = useState(true);
+export default function CommissionerSummary({ filters }) {
+  const { setLoader } = useLoader();
   const [error, setError] = useState(null);
   const [summaryItems, setSummaryItems] = useState([]);
 
   useEffect(() => {
     const fetchSummary = async () => {
+      setLoader(true);
       try {
-        const response = await apiClient.get(
-          "/rts-dashboard/getCommissionerSummary",
-        );
+        const params = new URLSearchParams();
+        if (filters.fromDate) params.append("fromDate", filters.fromDate);
+        if (filters.toDate) params.append("toDate", filters.toDate);
+        if (filters.ward) params.append("wardName", filters.ward);
+        if (filters.status) params.append("status", filters.status);
+        if (filters.type) params.append("serviceName", filters.type);
+        if (filters.officer) params.append("officerName", filters.officer);
+
+        const queryString = params.toString();
+        const endpoint = `/rts-dashboard/getCommissionerSummary${queryString ? `?${queryString}` : ""}`;
+
+        const response = await apiClient.get(endpoint);
         if (response.success && response.data?.length > 0) {
           const data = response.data[0];
           const items = [
@@ -35,14 +46,13 @@ export default function CommissionerSummary() {
         console.error(err);
         setError(err.message);
       } finally {
-        setLoading(false);
+        setLoader(false);
       }
     };
 
     fetchSummary();
-  }, []);
+  }, [filters]);
 
-  if (loading) return <div className="card">Loading summary...</div>;
   if (error) return <div className="card">Error: {error}</div>;
 
   return (

@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from "react";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 import DataTable from "./DataTable";
 
-const OfficesTable = () => {
-  const [loading, setLoading] = useState(true);
+const OfficesTable = ({ filters }) => {
+  const { setLoader } = useLoader();
   const [error, setError] = useState(null);
   const [officersData, setOfficersData] = useState([]);
 
   useEffect(() => {
     const fetchOfficers = async () => {
+      setLoader(true);
       try {
-        const response = await apiClient.get("/rts-dashboard/getOfficerWork");
+        const params = new URLSearchParams();
+        if (filters.fromDate) params.append("fromDate", filters.fromDate);
+        if (filters.toDate) params.append("toDate", filters.toDate);
+        if (filters.ward) params.append("wardName", filters.ward);
+        if (filters.status) params.append("status", filters.status);
+        if (filters.type) params.append("serviceName", filters.type);
+        if (filters.officer) params.append("officerName", filters.officer);
+
+        const queryString = params.toString();
+        const endpoint = `/rts-dashboard/getOfficerWork${queryString ? `?${queryString}` : ""}`;
+
+        const response = await apiClient.get(endpoint);
         if (response.success && Array.isArray(response.data)) {
           const data = response.data.map((item) => ({
             OFFICER_NAME: item.OFFICER_NAME,
@@ -19,8 +32,7 @@ const OfficesTable = () => {
             PENDING_APPLICATIONS: item.PENDING_APPLICATIONS,
             DELAYED_APPLICATIONS: item.DELAYED_APPLICATIONS,
           }));
-
-          setOfficersData(data); 
+          setOfficersData(data);
         } else {
           throw new Error(response.message || "Invalid data format");
         }
@@ -28,14 +40,13 @@ const OfficesTable = () => {
         console.error(err);
         setError(err.message);
       } finally {
-        setLoading(false);
+        setLoader(false);
       }
     };
 
     fetchOfficers();
-  }, []);
+  }, [filters]);
 
-  if (loading) return <div className="card">Loading officers data...</div>;
   if (error) return <div className="card">Error: {error}</div>;
 
   const headers = [

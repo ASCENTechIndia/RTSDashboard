@@ -48,9 +48,9 @@ export default function FilterBar({ filters, onFilterChange }) {
           if (result.status === "fulfilled" && result.value?.success) {
             const response = result.value;
             if (endpointName === "ward" && response.data?.rows) {
-              setWardOptions(response.data.rows.map((w) => ({ label: w.WARDNAME, value: w.WARDID })));
+              setWardOptions(response.data.rows.map((w) => ({ label: w.WARDNAME, value: w.WARDNAME })));
             } else if (endpointName === "type" && response.data?.rows) {
-              setTypeOptions(response.data.rows.map((s) => ({ label: s.VAR_SERVICE_ENG_NAME, value: s.NUM_SERVICE_SERVICEID })));
+              setTypeOptions(response.data.rows.map((s) => ({ label: s.VAR_SERVICE_ENG_NAME, value: s.VAR_SERVICE_ENG_NAME })));
             } else if (endpointName === "officer" && response.data?.rows) {
               setOfficerOptions(response.data.rows.map((u) => ({ label: u.VAR_USER_USERNAME, value: u.VAR_USER_USERNAME })));
             } else if (endpointName === "status" && Array.isArray(response.data)) {

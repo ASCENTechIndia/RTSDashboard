@@ -8,79 +8,59 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { topServices } from "../data/dummyData";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
-export default function TopServicesBar() {
-
+export default function TopServicesBar({ filters }) {
+  const { setLoader } = useLoader();
   const [serviceBarData, setServiceBarData] = useState([]);
 
-
   const fetchServiceBarData = async () => {
+    setLoader(true);
     try {
-      const response = await apiClient.get(`/rts-dashboard/topServices`);
+      const params = new URLSearchParams();
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.ward) params.append("wardName", filters.ward);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("serviceName", filters.type);
+      if (filters.officer) params.append("officerName", filters.officer);
 
-      if (response.success) {
-        const updatedData = response.data.map(item => ({
-          name: item?.VAR_SERVICE_ENG_NAME,
-          value: item?.APPROVED_APPLICATIONS,
-          rank: item?.RANK_NO
+      const queryString = params.toString();
+      const endpoint = `/rts-dashboard/topServices${queryString ? `?${queryString}` : ""}`;
+
+      const response = await apiClient.get(endpoint);
+      if (response.success && Array.isArray(response.data)) {
+        const updatedData = response.data.map((item) => ({
+          name: item.SERVNM,
+          value: item.APPROVED_APPLICATIONS,
+          rank: item.RANK_NO,
         }));
-
         setServiceBarData(updatedData);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching top services data:", error);
+    } finally {
+      setLoader(false);
     }
   };
 
-  const chartHeight = serviceBarData.length * 35;
-
   useEffect(() => {
     fetchServiceBarData();
-  }, []);
+  }, [filters]);
+
+  const chartHeight = serviceBarData.length * 35;
 
   return (
-    // <div className="card">
-    //   <h3 className="card-title">सेवा प्रकारानुसार वितरण (Top Services)</h3>
-    //   <div style={{ width: "100%", height: 210, flex: 1 }}>
-    //     <ResponsiveContainer>
-    //       <BarChart
-    //         data={serviceBarData}
-    //         layout="vertical"
-    //         margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
-    //       >
-    //         <CartesianGrid horizontal={false} stroke="#eef0f4" />
-    //         <XAxis type="number" tick={{ fontSize: 9, fill: "#6b7280" }} />
-    //         <YAxis
-    //           type="category"
-    //           dataKey="name"
-    //           tick={{ fontSize: 9, fill: "#374151" }}
-    //           width={95}
-    //         />
-    //         <Tooltip />
-    //         <Bar
-    //           dataKey="value"
-    //           radius={[0, 3, 3, 0]}
-    //           barSize={12}
-    //           fill="#2563eb"
-    //           label={{ position: "right", fontSize: 9, fill: "#374151" }}
-    //         />
-    //       </BarChart>
-    //     </ResponsiveContainer>
-    //   </div>
-    // </div>
-
     <div className="card">
       <h3 className="card-title">सेवा प्रकारानुसार वितरण (Top Services)</h3>
-
       <div
         style={{
           height: 210,
           overflowY: "auto",
           overflowX: "hidden",
           paddingLeft: "5px",
-          paddingRight: "5px"
+          paddingRight: "5px",
         }}
       >
         <div style={{ width: "100%", height: chartHeight }}>
@@ -92,21 +72,14 @@ export default function TopServicesBar() {
               barCategoryGap={12}
             >
               <CartesianGrid horizontal={false} stroke="#eef0f4" />
-
-              <XAxis
-                type="number"
-                tick={{ fontSize: 9, fill: "#6b7280" }}
-              />
-
+              <XAxis type="number" tick={{ fontSize: 9, fill: "#6b7280" }} />
               <YAxis
                 type="category"
                 dataKey="name"
                 tick={{ fontSize: 9, fill: "#374151" }}
                 width={140}
               />
-
               <Tooltip />
-
               <Bar
                 dataKey="value"
                 radius={[0, 3, 3, 0]}

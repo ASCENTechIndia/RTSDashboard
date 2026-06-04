@@ -62,7 +62,7 @@ export default function App() {
           <div className="grid-4">
             <WardsTable />
             <OfficesTable />
-            <DelayedServicesTable />
+            <DelayedServicesTable filters={filters}/>
             <CommissionerSummary />
           </div>
 

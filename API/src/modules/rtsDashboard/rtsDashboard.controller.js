@@ -222,14 +222,22 @@ async function getServicewiseTopDelay(req, res, next) {
 
 async function getPrabhagwiseApplications(req, res, next) {
   try {
-    const rows = await servicePrabhagwiseApplications();
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const rows = await servicePrabhagwiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications completed');
     auditLog({
       action: 'PRABHAGWISE_APPLICATIONS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: {  count: rows?.length || 0 },
+      details: {filters,  count: rows?.length || 0 },
       requestMeta: requestMeta(req),
     });
     return res.ok(rows);

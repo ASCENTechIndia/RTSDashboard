@@ -29,8 +29,11 @@ export default function DelayedServicesTable({ filters }) {
           AVG_DELAY_DAYS: item.AVG_DELAY_DAYS,
         }));
         setDelayedServiceTableData(updatedData);
+      } else {
+        setDelayedServiceTableData([]);
       }
     } catch (error) {
+      setDelayedServiceTableData([]);
       console.error("Error fetching delayed services:", error);
     } finally {
       setLoader(false);

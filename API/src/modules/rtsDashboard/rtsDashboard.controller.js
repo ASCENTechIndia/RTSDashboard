@@ -70,7 +70,6 @@ async function getTatWisePending(req, res, next) {
       const filters = {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
-      deptName: req.query.deptName || null,
       serviceName: req.query.serviceName || null,
       wardName: req.query.wardName || null,
       officerName: req.query.officerName || null,
@@ -135,15 +134,22 @@ async function getApplicationStatusSummary(req, res, next) {
 
 async function getDetailedApplicationStatus(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || req.user?.ulbId;
-    const data = await serviceDetailedApplicationStatus(ulbId);
+      const filters = {
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      serviceName: req.query.serviceName || null,
+      wardName: req.query.wardName || null,
+      officerName: req.query.officerName || null,
+      status: req.query.status || null,
+    };
+    const data = await serviceDetailedApplicationStatus(filters);
     logApiSuccess(req, 200, data, 'Detailed Application Status Report completed');
     auditLog({
       action: 'DETAILED_APPLICATION_STATUS',
       actor: req.user?.userId || 'system',
       module: 'rtsDashboard',
       status: 'SUCCESS',
-      details: { ulbId },
+      details: { filters },
       requestMeta: requestMeta(req),
     });
     return res.ok(data);

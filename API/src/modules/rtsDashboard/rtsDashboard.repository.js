@@ -185,29 +185,43 @@ async function repoApplicationStatusSummary(ulbId = 4) {
 }
 
 // Detailed Application Status Summary
-async function repoDetailedApplicationStatus(ulbId = 4) {
+async function repoDetailedApplicationStatus(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
   const sql = `
-    SELECT 
-      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END) AS approved_applications,
-      SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP') THEN 1 END) AS pending_applications,
-      SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END) AS reject_applications,
-      SUM(CASE WHEN var_application_status NOT IN ('NW','AP','DL','CP','IP','VP','PP','CR','DN') THEN 1 END) AS others_applications
-    FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
-      INNER JOIN aorts_service_def
-        ON num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config 
-        ON num_serv_servid = num_service_serviceid 
-        AND num_serv_deptid = num_service_deptid  
-        AND num_serv_ulbid = num_application_ulbid
-    WHERE a.num_application_ulbid = :ulbId
+    SELECT
+      SUM(approved_applications) AS approved_applications,
+      SUM(pending_applications) AS pending_applications
+    FROM vw_resolvedpending_applications
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
   `;
-  const binds = { ulbId: Number(ulbId) };
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
   const result = await executeQuery(sql, binds);
-  return result.rows?.[0] || {};
+
+  return result.rows?.[0] || {
+    APPROVED_APPLICATIONS: 0,
+    PENDING_APPLICATIONS: 0,
+  };
 }
 
 // Top Services

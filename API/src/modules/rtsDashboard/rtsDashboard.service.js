@@ -27,28 +27,59 @@ async function serviceDeptWiseApplications(ulbId) {
   return repoDeptWiseApplications(ulbId);
 }
 
-async function serviceTatWisePending(ulbId) {
-  return repoTatWisePending(ulbId);
+async function serviceTatWisePending( filters = {}) {
+  return repoTatWisePending( filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status);
 }
 
-async function serviceMonthwiseApplicationTrend(ulbId) {
-  return repoMonthwiseApplicationTrend(ulbId);
+async function serviceMonthwiseApplicationTrend(filters = {}) {
+  return repoMonthwiseApplicationTrend( filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status);
 }
 
 async function serviceApplicationStatusSummary(ulbId) {
   return repoApplicationStatusSummary(ulbId);
 }
 
-async function serviceDetailedApplicationStatus(ulbId) {
-  return repoDetailedApplicationStatus(ulbId);
+async function serviceDetailedApplicationStatus(filters = {}) {
+  return repoDetailedApplicationStatus(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
-async function serviceTopServices(ulbId) {
-  return repoTopServices(ulbId);
+async function serviceTopServices(filters = {}) {
+  return repoTopServices(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
-async function serviceServicewiseTopDelay(ulbId) {
-  return repoServicewiseTopDelay(ulbId);
+async function serviceServicewiseTopDelay(filters = {}) {
+  return repoServicewiseTopDelay(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function servicePrabhagwiseApplications(){

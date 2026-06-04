@@ -21,13 +21,12 @@ export default function MonthlyTrendChart({ filters }) {
       const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
       const response = await apiClient.get(monthTrendUrl);
-      console.log(response);
-return;
+
       if (response.success && response.data.length > 0) {
-        const updatedChartData = response.data.map(item => ({
-          month: item.MONTHS,
-          received: item.RECEIVED_APPLICATIONS || 0,
-          disposed: item.APPROVED_APPLICATIONS || 0
+        const updatedChartData = response?.data.map(item => ({
+          month: item?.MONTHS,
+          received: item?.RECEIVED_APPLICATIONS || 0,
+          disposed: item?.APPROVED_APPLICATIONS || 0
         }));
         setMonthlyTrendChartData(updatedChartData);
       }
@@ -37,8 +36,8 @@ return;
   }
 
   useEffect(() => {
-    fetchTrendChartData();
-  }, [])
+    if (filters) fetchTrendChartData();
+  }, [filters])
 
   return (
     <div className="card">

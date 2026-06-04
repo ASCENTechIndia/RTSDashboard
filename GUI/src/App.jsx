@@ -54,7 +54,7 @@ export default function App() {
           {/* Row 2 — Monthly trend | Status donut | Top services | Complaints */}
           <div className="grid-4">
             <MonthlyTrendChart filters={filters} />
-            <StatusDonut />
+            <StatusDonut filters={filters} />
             <TopServicesBar />
             <ComplaintsList />
           </div>

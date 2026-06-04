@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { tatDistribution } from "../data/dummyData";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
 const colors = [
   "#22a06b",
@@ -12,12 +13,14 @@ const colors = [
 ]
 
 export default function TatDonut({ filters }) {
+  const { setLoader } = useLoader();
 
   const [tatData, setTatData] = useState([]);
   const [tatTotal, setTatTotal] = useState("");
 
   const fetchTATData = async () => {
     try {
+      setLoader(true);
       const params = new URLSearchParams();
       if (filters?.fromDate) params.append("fromDate", filters.fromDate);
       if (filters?.toDate) params.append("toDate", filters.toDate);
@@ -44,6 +47,8 @@ export default function TatDonut({ filters }) {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoader(false);
     }
   }
 

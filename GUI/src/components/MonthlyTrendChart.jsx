@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monthlyTrend } from '../data/dummyData';
 import apiClient from '../services/apiClient';
+import { useLoader } from '../context/LoaderContext';
 
 export default function MonthlyTrendChart({ filters }) {
+  const { setLoader } = useLoader();
   const [monthlyTrendChartData, setMonthlyTrendChartData] = useState([]);
 
   const fetchTrendChartData = async () => {
     try {
-
+      setLoader(true);
       const params = new URLSearchParams();
       if (filters?.fromDate) params.append("fromDate", filters.fromDate);
       if (filters?.toDate) params.append("toDate", filters.toDate);
@@ -32,6 +34,8 @@ export default function MonthlyTrendChart({ filters }) {
       }
     } catch (error) {
       console.error(error);
+    } finally { 
+      setLoader(false);
     }
   }
 

@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { statusWise } from "../data/dummyData";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
 export default function StatusDonut({ filters }) {
+  const { setLoader } = useLoader();
   const [statusChartData, setStatusChartData] = useState([]);
   const [statusTotal, setStatusTotal] = useState("");
 
   const fetchStatusChartData = async () => {
     try {
+      setLoader(true);
       const params = new URLSearchParams();
       if (filters?.fromDate) params.append("fromDate", filters.fromDate);
       if (filters?.toDate) params.append("toDate", filters.toDate);
@@ -23,7 +26,6 @@ export default function StatusDonut({ filters }) {
 
       if (response.success) {
         const total1 = Object.values(response.data).reduce((sum, row) => sum += row, 0);
-        console.log(total1);
         const updatedData = [
           {
             name: "Approved",
@@ -55,6 +57,8 @@ export default function StatusDonut({ filters }) {
       }
     } catch (error) {
       console.error(error);
+    } finally { 
+      setLoader(false);
     }
   };
 

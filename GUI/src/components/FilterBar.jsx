@@ -94,23 +94,6 @@ export default function FilterBar() {
         </select>
       </div>
 
-      {/* प्रभाग */}
-      <div className="filter-group">
-        <label className="filter-label">प्रभाग</label>
-        <select
-          name="ward"
-          value={formData.ward}
-          onChange={handleChange}
-          className="filter-select"
-        >
-          {wardOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {/* विभाग */}
       <div className="filter-group">
         <label className="filter-label">विभाग</label>
@@ -128,9 +111,9 @@ export default function FilterBar() {
         </select>
       </div>
 
-      {/* प्रकार */}
+       {/* सेवा प्रकार */}
       <div className="filter-group">
-        <label className="filter-label">प्रकार</label>
+        <label className="filter-label">सेवा प्रकार</label>
         <select
           name="type"
           value={formData.type}
@@ -145,8 +128,29 @@ export default function FilterBar() {
         </select>
       </div>
 
-      {/* कार्यालय */}
+      {/* प्रभाग */}
       <div className="filter-group">
+        <label className="filter-label">प्रभाग</label>
+        <select
+          name="ward"
+          value={formData.ward}
+          onChange={handleChange}
+          className="filter-select"
+        >
+          {wardOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      
+
+     
+
+      {/* कार्यालय */}
+      {/* <div className="filter-group">
         <label className="filter-label">कार्यालय</label>
         <select
           name="office"
@@ -160,7 +164,7 @@ export default function FilterBar() {
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
 
       {/* अधिकारी */}
       <div className="filter-group">

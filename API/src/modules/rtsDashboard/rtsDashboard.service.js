@@ -82,12 +82,26 @@ async function serviceServicewiseTopDelay(filters = {}) {
   );
 }
 
-async function servicePrabhagwiseApplications(){
-  return repoPrabhagwiseApplications();
+async function servicePrabhagwiseApplications(filters = {}) {
+  return repoPrabhagwiseApplications(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
-async function serviceCommissionerSummary(){
-  return repoCommissionerSummary();
+async function serviceCommissionerSummary(filters = {}) {
+  return repoCommissionerSummary(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function serviceAlerts(ulbId){

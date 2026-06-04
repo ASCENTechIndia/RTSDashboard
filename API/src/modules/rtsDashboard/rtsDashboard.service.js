@@ -121,8 +121,15 @@ async function serviceRTSComplaints(){
   return repoRTSComplaints();
 }
 
-async function serviceOfficerWork(){
-  return repoOfficerWork();
+async function serviceOfficerWork(filters = {}){
+  return repoOfficerWork(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 module.exports = {

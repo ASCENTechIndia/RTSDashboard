@@ -526,9 +526,45 @@ async function repoRTSComplaints() {
   return result.rows || [];
 }
 
-async function repoOfficerWork() {
-  const sql = `select * From vw_officerwise_works FETCH FIRST 10 ROWS ONLY`;
-  const result = await executeQuery(sql, {});
+async function repoOfficerWork(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      total_applications,
+      approved_applications,
+      pending_applications,
+      delayed_applications
+    FROM vw_officerwise_works
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY total_applications DESC
+    FETCH FIRST 10 ROWS ONLY
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 

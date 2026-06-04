@@ -297,9 +297,43 @@ async function repoTopServices(
 }
 
 // Service-wise Top Delay
-async function repoServicewiseTopDelay(ulbId) {
-  const sql = `SELECT * FROM vw_servicewisetop_delay`;
-  const result = await executeQuery(sql, {});
+async function repoServicewiseTopDelay(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      officer_name,
+      servnm,
+      prabhag_nm,
+      app_date,
+      status,
+      delayed_applications,
+      avg_delay_days
+    FROM vw_servicewisetop_delay
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    ORDER BY delayed_applications DESC, avg_delay_days DESC
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 

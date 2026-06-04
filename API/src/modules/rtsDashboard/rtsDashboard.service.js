@@ -71,8 +71,15 @@ async function serviceTopServices(filters = {}) {
   );
 }
 
-async function serviceServicewiseTopDelay(ulbId) {
-  return repoServicewiseTopDelay(ulbId);
+async function serviceServicewiseTopDelay(filters = {}) {
+  return repoServicewiseTopDelay(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function servicePrabhagwiseApplications(){

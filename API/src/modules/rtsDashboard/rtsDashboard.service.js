@@ -36,8 +36,13 @@ async function serviceTatWisePending( filters = {}) {
     filters.status);
 }
 
-async function serviceMonthwiseApplicationTrend(ulbId) {
-  return repoMonthwiseApplicationTrend(ulbId);
+async function serviceMonthwiseApplicationTrend(filters = {}) {
+  return repoMonthwiseApplicationTrend( filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status);
 }
 
 async function serviceApplicationStatusSummary(ulbId) {
@@ -55,8 +60,15 @@ async function serviceDetailedApplicationStatus(filters = {}) {
   );
 }
 
-async function serviceTopServices(ulbId) {
-  return repoTopServices(ulbId);
+async function serviceTopServices(filters = {}) {
+  return repoTopServices(
+    filters.fromDate,
+    filters.toDate,
+    filters.serviceName,
+    filters.wardName,
+    filters.officerName,
+    filters.status
+  );
 }
 
 async function serviceServicewiseTopDelay(ulbId) {

@@ -154,9 +154,42 @@ ORDER BY
 }
 
 // Monthwise application trend
-async function repoMonthwiseApplicationTrend(ulbId) {
-  const sql = `SELECT * FROM vw_monthwiseapplication_trend`;
-  const result = await executeQuery(sql, {});
+async function repoMonthwiseApplicationTrend(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      months,
+      SUM(received_applications) AS received_applications,
+      SUM(approved_applications) AS approved_applications
+    FROM vw_monthwiseapplication_trend
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    GROUP BY months
+    ORDER BY MIN(app_date)
+  `;
+
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+
+  const result = await executeQuery(sql, binds);
+
   return result.rows || [];
 }
 
@@ -227,9 +260,39 @@ async function repoDetailedApplicationStatus(
 }
 
 // Top Services
-async function repoTopServices(ulbId) {
-  const sql = `SELECT * FROM vw_top_services`;
-  const result = await executeQuery(sql, {});
+async function repoTopServices(
+  fromDate,
+  toDate,
+  serviceName,
+  wardName,
+  officerName,
+  status
+) {
+  const sql = `
+    SELECT
+      rank_no,
+      servnm,
+      SUM(approved_applications) AS approved_applications
+    FROM vw_top_services
+    WHERE 1 = 1
+      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR servnm = :serviceName)
+      AND (:wardName IS NULL OR prabhag_nm = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR status = :status)
+    GROUP BY rank_no, servnm
+    ORDER BY rank_no
+  `;
+  const binds = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    serviceName: serviceName || null,
+    wardName: wardName || null,
+    officerName: officerName || null,
+    status: status || null,
+  };
+  const result = await executeQuery(sql, binds);
   return result.rows || [];
 }
 

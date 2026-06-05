@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
 
 export default function FilterBar({ filters, onFilterChange }) {
   const [wardOptions, setWardOptions] = useState([]);
@@ -7,6 +8,7 @@ export default function FilterBar({ filters, onFilterChange }) {
   const [officerOptions, setOfficerOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setLoader } = useLoader();
 
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
@@ -57,6 +59,7 @@ export default function FilterBar({ filters, onFilterChange }) {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
+        setLoader(true);
         const endpoints = [
           { name: "ward", request: apiClient.get("/dropdowns/wards?ulbid=4") },
           {
@@ -133,6 +136,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         setStatusOptions([]);
       } finally {
         setLoading(false);
+        setLoader(false);
       }
     };
 
@@ -279,7 +283,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           name="officer"
           value={filters.officer}
           onChange={handleSelectChange}
-          className="filter-select"
+          className="filter-select"x
           style={{ width: "100%" }}
         >
           <option value="">सर्व</option>

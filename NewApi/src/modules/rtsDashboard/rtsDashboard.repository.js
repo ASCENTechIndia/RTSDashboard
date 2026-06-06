@@ -618,35 +618,52 @@ async function repoPrabhagwiseApplications(
 ) {
   const sql = `
     SELECT *
-    FROM (
-      SELECT
-        w.wardname AS prabhag_nm,
-        COUNT(a.var_application_appno) AS total_applications,
-        SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications,
-        SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END) AS pending_applications,
-        NVL(ROUND(
-          100 * SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(a.var_application_appno), 0),
-          2
-        ), 0) AS approved_percentage,
-        ROW_NUMBER() OVER (ORDER BY COUNT(a.var_application_appno) DESC) AS rank
-      FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND infodet.num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
-      INNER JOIN aorts_service_def sd
-        ON sd.num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config sc
-        ON sc.num_serv_servid = sd.num_service_serviceid
-        AND sc.num_serv_deptid = sd.num_service_deptid
-        AND sc.num_serv_ulbid = a.num_application_ulbid
-      INNER JOIN admins.aoms_dept_mas d
-        ON d.num_dept_id = a.num_application_deptid
-      INNER JOIN admins.aoma_user_def u
-        ON d.num_dept_id = u.num_user_deptid
-      INNER JOIN prop.vw_ward_mas w
-        ON w.wardid = a.num_application_zoneid
+FROM
+(
+    SELECT
+        a.prabhag_nm,
+        COUNT(a.appno) AS total_applications,
+
+        SUM(
+            CASE
+                WHEN a.status IN ('approved','Reject')
+                THEN 1
+                ELSE 0
+            END
+        ) AS approved_applications,
+
+        SUM(
+            CASE
+                WHEN a.status = 'Pending'
+                THEN 1
+                ELSE 0
+            END
+        ) AS pending_applications,
+
+        NVL(
+    ROUND(
+        100 *
+        SUM(
+            CASE
+                WHEN status = 'approved'
+                 THEN 1
+                ELSE 0
+            END
+        )
+        / NULLIF(COUNT(appno),0),
+        2
+    ),
+    0
+) AS approved_percentage,
+
+        ROW_NUMBER() OVER
+        (
+            ORDER BY COUNT(a.appno) DESC
+        ) AS rank
+
+    FROM vw_prbhagwise_applilist a
+    INNER JOIN aorts_service_def sd
+        ON sd.num_service_serviceid = a.serviceid
       WHERE 1 = 1
   `;
 
@@ -654,37 +671,37 @@ async function repoPrabhagwiseApplications(
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND a.ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    whereClauses += ` AND a.officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND a.serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND a.wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(a.app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(a.app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
   const finalSql = sql + whereClauses + `
-      GROUP BY w.wardname
+      GROUP BY a.prabhag_nm
     )
     WHERE rank <= 10
   `;
@@ -802,19 +819,17 @@ async function repoAlerts(ulbId) {
 }
 
 async function repoComplaintStatus() {
-  const sql = `SELECT
-    (pending_complaints + resolved_complaints) AS total_complaints,
-    pending_complaints,
-    resolved_complaints,
-    NVL(
-        ROUND(
-            resolved_complaints * 100 /
-            NULLIF(pending_complaints + resolved_complaints, 0),
-            2
-        ),
-        0
-    ) AS resolved_percentage
-FROM vw_complaints_status`;
+  const sql = `SELECT COUNT (id) AS total_complaints,
+       COUNT (CASE WHEN hearingstat IN ('A', 'R') THEN 1 END) AS resolved_complaints,
+       COUNT (CASE WHEN hearingstat is null or  hearingstat = 'P' THEN 1 END) AS pending_complaints,
+       ROUND (
+             COUNT (CASE WHEN hearingstat IN ('A', 'R') THEN 1 END)
+           * 100
+           / NULLIF (COUNT (id), 0),
+           2)
+           AS resolved_percentage
+  FROM view_appealdtls
+`;
   const result = await executeQuery(sql, {});
   return result.rows || [];
 }

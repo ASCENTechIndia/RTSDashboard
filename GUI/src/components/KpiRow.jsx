@@ -54,70 +54,97 @@ export default function KpiRow({ filters }) {
       const query = buildQueryString();
 
       const endpoints = [
-        `/topcounts/totalApplications${query}`,
-        `/topcounts/approvedApplications${query}`,
-        `/topcounts/pendingApplications${query}`,
-        `/topcounts/delayedApplications${query}`,
-        `/rts-dashboard/applicationStatusSummary${query}`,
-        `/topcounts/todaysApplications${query}`,
-        `/topcounts/todaysApproved${query}`,
-        `/rts-dashboard/getRTSComplaints${query}`,
+        // `/topcounts/totalApplications${query}`,
+        // `/topcounts/approvedApplications${query}`,
+        // `/topcounts/pendingApplications${query}`,
+        // `/topcounts/delayedApplications${query}`,
+        `/rts-dashboard/getCommissionerSummary${query ? `${query.replaceAll("+", " ")}` : ""}`, // this api will used for first four card
+        `/rts-dashboard/applicationStatusSummary${query ? `${query.replaceAll("+", " ")}` : ""}`,
+        `/topcounts/todaysApplications${query ? `${query.replaceAll("+", " ")}` : ""}`,
+        // `/topcounts/todaysApproved${query ? `${query.replaceAll("+", " ")}` : ""}`,
+        `/rts-dashboard/getRTSComplaints${query ? `${query.replaceAll("+", " ")}` : ""}`,
       ];
 
       const requests = endpoints.map((url) => apiClient.get(url));
       const results = await Promise.allSettled(requests);
+      // if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+      //   const val = results[0].value.data?.total_applications ?? 0;
+      //   setTotalValue(val.toLocaleString("en-IN"));
+      // } else {
+      //   setTotalValue("0");
+      // }
 
+      // if (results[1]?.status === "fulfilled" && results[1].value?.success) {
+      //   const val = results[1].value.data?.approved_applications ?? 0;
+      //   setDisposedValue(val.toLocaleString("en-IN"));
+      // } else {
+      //   setDisposedValue("0");
+      // }
+
+      // if (results[2]?.status === "fulfilled" && results[2].value?.success) {
+      //   const val = results[2].value.data?.pending_applications ?? 0;
+      //   setPendingValue(val.toLocaleString("en-IN"));
+      // } else {
+      //   setPendingValue("0");
+      // }
+
+      // if (results[3]?.status === "fulfilled" && results[3].value?.success) {
+      //   const val = results[3].value.data?.delayed_applications ?? 0;
+      //   setDelayedValue(val.toLocaleString("en-IN"));
+      // } else {
+      //   setDelayedValue(0);
+      // }
       if (results[0]?.status === "fulfilled" && results[0].value?.success) {
-        const val = results[0].value.data?.total_applications ?? 0;
+        const val = results[0].value.data?.[0].TOTAL_APPLICATIONS ?? 0;
         setTotalValue(val.toLocaleString("en-IN"));
       } else {
         setTotalValue("0");
       }
 
-      if (results[1]?.status === "fulfilled" && results[1].value?.success) {
-        const val = results[1].value.data?.approved_applications ?? 0;
+      if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+        const val = results[0].value.data?.[0].APPROVED_APPLICATIONS ?? 0;
         setDisposedValue(val.toLocaleString("en-IN"));
       } else {
         setDisposedValue("0");
       }
 
-      if (results[2]?.status === "fulfilled" && results[2].value?.success) {
-        const val = results[2].value.data?.pending_applications ?? 0;
+      if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+        const val = results[0].value.data?.[0].PENDING_APPLICATIONS ?? 0;
         setPendingValue(val.toLocaleString("en-IN"));
       } else {
         setPendingValue("0");
       }
 
-      if (results[3]?.status === "fulfilled" && results[3].value?.success) {
-        const val = results[3].value.data?.delayed_applications ?? 0;
+      if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+        const val = results[0].value.data?.[0].APPLICATIONS_GREATER15 ?? 0;
         setDelayedValue(val.toLocaleString("en-IN"));
       } else {
         setDelayedValue(0);
       }
 
-      if (results[4]?.status === "fulfilled" && results[4].value?.success) {
-        const val = results[4].value.data?.approved_percentage ?? 0;
+      if (results[1]?.status === "fulfilled" && results[1].value?.success) {
+        const val = results[1].value.data?.approved_percentage ?? 0;
         setOntimeValue(`${Number(val).toFixed(2)}%`);
       } else {
         setOntimeValue("0%");
       }
 
-      if (results[5]?.status === "fulfilled" && results[5].value?.success) {
-        const val = results[5].value.data?.todays_applications ?? 0;
+      if (results[2]?.status === "fulfilled" && results[2].value?.success) {
+        const val = results[2].value.data?.approved_applications ?? 0;
         setTodayReceivedValue(val.toLocaleString("en-IN"));
       } else {
         setTodayReceivedValue("0");
       }
 
-      if (results[6]?.status === "fulfilled" && results[6].value?.success) {
-        const val = results[6].value.data?.todays_approved ?? 0;
+      if (results[2]?.status === "fulfilled" && results[2].value?.success) {
+        const val = results[2].value.data?.todays_applications ?? 0;
         setTodayDisposedValue(val.toLocaleString("en-IN"));
       } else {
         setTodayDisposedValue("0");
       }
 
-      if (results[7]?.status === "fulfilled" && results[7].value?.success) {
-        const val = results[7].value.data?.[0]?.RTS_COMPLAINTS ?? 0;
+      if (results[3]?.status === "fulfilled" && results[3].value?.success) {
+        const val = results[3].value.data?.[0]?.RTS_COMPLAINTS ?? 0;
         setRtsValue(val.toLocaleString("en-IN"));
       } else {
         setRtsValue("0");

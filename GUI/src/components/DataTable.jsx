@@ -1,30 +1,11 @@
-import React, { useRef, useEffect, useState } from "react";
+import React from "react";
 
 const DataTable = ({
   headers = [],
   data = [],
   keyMapping = {},
-  rowLimit = 7,
+  tableHeight = 250,
 }) => {
-  const [maxHeight, setMaxHeight] = useState("none");
-  const tbodyRef = useRef(null);
-
-  useEffect(() => {
-    if (data.length > rowLimit && tbodyRef.current) {
-      const firstRow = tbodyRef.current.querySelector("tr");
-      if (firstRow) {
-        const rowHeight = firstRow.offsetHeight;
-        const thead = document.querySelector(".data-table-container thead");
-        const headerHeight = thead ? thead.offsetHeight : 0;
-        const totalHeight = headerHeight + rowLimit * rowHeight;
-        setMaxHeight(totalHeight);
-      }
-    } else {
-      setMaxHeight("none");
-    }
-  }, [data, rowLimit]);
-
-  const hasScroll = data.length > rowLimit;
   const equalColumnWidth = `${100 / headers.length}%`;
 
   return (
@@ -32,8 +13,8 @@ const DataTable = ({
       <div style={{ overflowX: "auto" }}>
         <div
           style={{
-            maxHeight: maxHeight === "none" ? "none" : `${maxHeight}px`,
-            overflowY: hasScroll ? "auto" : "visible",
+            height: `${tableHeight}px`,
+            overflowY: "auto",
           }}
         >
           <table
@@ -41,7 +22,7 @@ const DataTable = ({
             style={{
               borderCollapse: "collapse",
               width: "100%",
-              tableLayout: "fixed", // forces equal column distribution
+              tableLayout: "fixed",
             }}
           >
             <colgroup>
@@ -57,7 +38,7 @@ const DataTable = ({
                     className="num"
                     style={{
                       textAlign: header.align || "center",
-                      whiteSpace: "normal", // allow wrapping for long headers
+                      whiteSpace: "normal",
                       wordBreak: "break-word",
                     }}
                   >
@@ -66,7 +47,7 @@ const DataTable = ({
                 ))}
               </tr>
             </thead>
-            <tbody ref={tbodyRef}>
+            <tbody>
               {data.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {headers.map((header, colIndex) => {

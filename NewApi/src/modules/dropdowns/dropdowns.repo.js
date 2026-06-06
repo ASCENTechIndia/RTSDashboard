@@ -1,7 +1,7 @@
 const { executeQuery } = require('../../db/queryExecutor');
 
 // Get services by ULB
-async function repoGetServices(ulbId = 4) {
+async function repoGetServices(ulbId = 1670) {
   const sql = `
     SELECT num_service_serviceid, var_service_eng_name 
     FROM aorts_service_def sd
@@ -18,7 +18,7 @@ async function repoGetServices(ulbId = 4) {
 
 
 // Get wards by ULB
-async function repoGetWards(ulbId = 4) {
+async function repoGetWards(ulbId = 1670) {
   const sql = `
     SELECT DISTINCT wardname, wardid
     FROM prop.vw_ward_mas
@@ -30,7 +30,7 @@ async function repoGetWards(ulbId = 4) {
 }
 
 // Get users by ULB
-async function repoGetUsers(ulbId = 4) {
+async function repoGetUsers(ulbId = 1670) {
   const sql = `
     SELECT DISTINCT var_user_username
     FROM aorts_application_det a

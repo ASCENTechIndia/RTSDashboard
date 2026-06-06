@@ -90,12 +90,12 @@ async function serviceTopServices(filters = {}) {
 
 async function serviceServicewiseTopDelay(filters = {}) {
   return repoServicewiseTopDelay(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
     filters.fromDate,
-    filters.toDate,
-    filters.serviceName,
-    filters.wardName,
-    filters.officerName,
-    filters.status
+    filters.toDate
   );
 }
 

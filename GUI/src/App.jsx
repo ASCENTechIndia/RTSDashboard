@@ -39,26 +39,26 @@ export default function App() {
         <Navbar />
         <div className="content">
           <FilterBar filters={filters} onFilterChange={handleFilterChange} />
-          {/* <KpiRow filters={filters} /> done */}
+          <KpiRow filters={filters} /> 
 
           <div className="grid-table">
-            {/* <DepartmentTable filters={filters} /> done */}
-            {/* <TatDonut filters={filters}/>  done */}
-            {/* <OnTimeGauge filters={filters} /> done */}
-            {/* <AlertsPanel /> */}
+            <DepartmentTable filters={filters} /> 
+            <TatDonut filters={filters}/>
+            <OnTimeGauge filters={filters} /> 
+            <AlertsPanel />
           </div>
 
           <div className="grid-4">
-            {/* <MonthlyTrendChart filters={filters}/>  done*/}
-            {/* <StatusDonut filters={filters}/> done */}
-            {/* <TopServicesBar filters={filters}/>  done */}
-            {/* <ComplaintsList /> */}  
+            <MonthlyTrendChart filters={filters}/>  
+            <StatusDonut filters={filters}/> 
+            <TopServicesBar filters={filters}/>  
+            <ComplaintsList />  
           </div>
 
           <div className="grid-4">
-            {/* <WardsTable filters={filters}/> done */}
-            {/* <OfficesTable filters={filters}/> done */}
-            {/* <DelayedServicesTable filters={filters}/> done */}
+            <WardsTable filters={filters}/> 
+            <OfficesTable filters={filters}/>
+            <DelayedServicesTable filters={filters}/>
             <CommissionerSummary filters={filters}/>
           </div>
 

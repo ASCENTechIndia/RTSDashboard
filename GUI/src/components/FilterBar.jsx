@@ -178,10 +178,53 @@ export default function FilterBar({ filters, onFilterChange }) {
     onFilterChange({ ...filters, [name]: value });
   };
 
+  const getFinancialYearDates = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    let financialYearStart;
+    if (currentMonth < 3) {
+      financialYearStart = new Date(currentYear - 1, 3, 1);
+    } else {
+      financialYearStart = new Date(currentYear, 3, 1);
+    }
+
+    // Format dates as dd-MON-yyyy
+    const formatDate = (date) => {
+      const day = String(date.getDate()).padStart(2, "0");
+      const months = [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+      ];
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    };
+
+    return {
+      fromDate: formatDate(financialYearStart),
+      toDate: formatDate(today),
+    };
+  };
+
   const handleReset = () => {
+    const { fromDate: defaultFromDate, toDate: defaultToDate } =
+      getFinancialYearDates();
+
     onFilterChange({
-      fromDate: "",
-      toDate: "",
+      fromDate: defaultFromDate,
+      toDate: defaultToDate,
       ward: "",
       department: "",
       type: "",

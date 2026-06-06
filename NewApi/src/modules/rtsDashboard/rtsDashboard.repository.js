@@ -166,70 +166,56 @@ async function repoTatWisePending(
  const sql = `
     SELECT 
       CASE 
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
       END AS days_bucket,
-      COUNT(a.var_application_appno) AS pending_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
-    WHERE a.var_application_status IN ('CP', 'IP', 'VP', 'PP', 'PS', 'PV')
-      AND 1 = 1
+      COUNT(appno) AS pending_applications
+    FROM vw_prbhagwise_applilist
+    inner join aorts_service_def on serviceid = num_service_serviceid
+    WHERE status IN ('Pending')
+      AND 1 = 1 
+ 
   `;
 
   let whereClauses = ``;
   const binds = {};
   if(ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
      binds.ulbId = ulbId;}
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
   if (serviceName) {
-    whereClauses += ` AND sd.var_service_eng_name = :serviceName`;
+    whereClauses += ` AND serviceid = :serviceName`;
     binds.serviceName = serviceName;
   }
 
   if (wardName) {
-    whereClauses += ` AND w.wardname = :wardName`;
+    whereClauses += ` AND wardid = :wardName`;
     binds.wardName = wardName;
   }
 
   if (officerName) {
-    whereClauses += ` AND u.var_user_username = :officerName`;
+    whereClauses += ` AND officer_name = :officerName`;
     binds.officerName = officerName;
   }
 
   const finalSql = sql + whereClauses + `
-    GROUP BY 
+   GROUP BY 
       CASE 
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
       END
     ORDER BY

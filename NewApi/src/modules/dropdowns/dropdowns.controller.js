@@ -12,7 +12,7 @@ function requestMeta(req) {
 
 async function getServices(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 4;
+    const ulbId = req.query.ulbid || 1670;
     const data = await serviceGetServices(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Services Report completed');
     auditLog({
@@ -39,7 +39,7 @@ async function getServices(req, res, next) {
 
 async function getWards(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 4;
+    const ulbId = req.query.ulbid || 1670;
     const data = await serviceGetWards(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Wards Report completed');
     auditLog({
@@ -59,7 +59,7 @@ async function getWards(req, res, next) {
 
 async function getUsers(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 4;
+    const ulbId = req.query.ulbid || 1670;
     const data = await serviceGetUsers(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Users Report completed');
     auditLog({

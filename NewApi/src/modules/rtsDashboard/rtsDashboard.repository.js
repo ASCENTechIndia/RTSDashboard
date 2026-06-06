@@ -2,7 +2,7 @@ const { executeQuery } = require("../../db/queryExecutor");
 
 // Counts endpoint queries
 async function repoCounts(
-  ulbId = 4,
+  ulbId = 1670,
   fromDate,
   toDate,
   deptName,
@@ -640,42 +640,87 @@ async function repoTopServices(
 
 // Service-wise Top Delay
 async function repoServicewiseTopDelay(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
   fromDate,
-  toDate,
-  serviceName,
-  wardName,
-  officerName,
-  status
+  toDate
 ) {
   const sql = `
     SELECT
-      officer_name,
-      servnm,
-      prabhag_nm,
-      app_date,
-      status,
-      delayed_applications,
-      avg_delay_days
-    FROM vw_servicewisetop_delay
+      sd.var_service_eng_name AS servnm,
+      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15 THEN 1 ELSE 0 END) AS pending_applications,
+      ROUND(
+        100 * SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15 THEN 1 ELSE 0 END) /
+        NULLIF(
+          SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15 THEN 1
+                   WHEN a.var_application_status IN ('NW','AP','DL') THEN 1
+                   ELSE 0 END),
+          0
+        ),
+        2
+      ) AS percentage
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR servnm = :serviceName)
-      AND (:wardName IS NULL OR prabhag_nm = :wardName)
-      AND (:officerName IS NULL OR officer_name = :officerName)
-      AND (:status IS NULL OR status = :status)
-    ORDER BY delayed_applications DESC, avg_delay_days DESC
   `;
 
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
-  const result = await executeQuery(sql, binds);
+  let whereClauses = ``;
+  const binds = {};
+
+  if (ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND u.var_user_username = :username`;
+    binds.username = username;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND w.wardid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    binds.toDate = toDate;
+  }
+
+  const finalSql = sql + whereClauses + `
+    GROUP BY sd.var_service_eng_name
+    HAVING SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15 THEN 1 ELSE 0 END) > 0
+    ORDER BY percentage DESC
+  `;
+
+  const result = await executeQuery(finalSql, binds);
   return result.rows || [];
 }
 

@@ -45,12 +45,12 @@ async function serviceTatWisePending( filters = {}) {
 }
 
 async function serviceMonthwiseApplicationTrend(filters = {}) {
-  return repoMonthwiseApplicationTrend( filters.fromDate,
-    filters.toDate,
-    filters.serviceName,
-    filters.wardName,
-    filters.officerName,
-    filters.status);
+  return repoMonthwiseApplicationTrend(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId
+  );
 }
 
 async function serviceApplicationStatusSummary(filters = {}) {
@@ -78,12 +78,12 @@ async function serviceDetailedApplicationStatus(filters = {}) {
 
 async function serviceTopServices(filters = {}) {
   return repoTopServices(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
     filters.fromDate,
-    filters.toDate,
-    filters.serviceName,
-    filters.wardName,
-    filters.officerName,
-    filters.status
+    filters.toDate
   );
 }
 

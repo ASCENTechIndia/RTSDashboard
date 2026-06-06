@@ -104,12 +104,10 @@ async function getTatWisePending(req, res, next) {
 async function getMonthwiseApplicationTrend(req, res, next) {
   try {
      const filters = {
-      fromDate: req.query.fromDate || null,
-      toDate: req.query.toDate || null,
-      serviceName: req.query.serviceName || null,
-      wardName: req.query.wardName || null,
-      officerName: req.query.officerName || null,
-      status: req.query.status || null,
+      ulbId: req.query.ulbId ? parseInt(req.query.ulbId) : null,
+      username: req.query.username || null,
+      serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
+      wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
     };
     const rows = await serviceMonthwiseApplicationTrend(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Monthwise Application Trend Report completed');
@@ -186,12 +184,12 @@ async function getDetailedApplicationStatus(req, res, next) {
 async function getTopServices(req, res, next) {
   try {
     const filters = {
+      ulbId: req.query.ulbId ? parseInt(req.query.ulbId) : null,
+      username: req.query.username || null,
+      serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
+      wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
-      serviceName: req.query.serviceName || null,
-      wardName: req.query.wardName || null,
-      officerName: req.query.officerName || null,
-      status: req.query.status || null,
     };
     const rows = await serviceTopServices(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Top Services Report completed');

@@ -45,6 +45,7 @@ export default function DepartmentTable({ filters }) {
       if (filters.status) params.append("status", filters.status);
       if (filters.type) params.append("serviceName", filters.type);
       if (filters.officer) params.append("officerName", filters.officer);
+      if(filters.department) params.append("department", filters.department)
 
       const queryString = params.toString();
       const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;

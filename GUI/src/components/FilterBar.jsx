@@ -95,7 +95,7 @@ export default function FilterBar({ filters, onFilterChange }) {
               setTypeOptions(
                 response.data.rows.map((s) => ({
                   label: s.VAR_SERVICE_ENG_NAME,
-                  value: s.VAR_SERVICE_ENG_NAME,
+                  value: s.NUM_SERVICE_SERVICEID,
                 })),
               );
             } else if (endpointName === "officer" && response.data?.rows) {

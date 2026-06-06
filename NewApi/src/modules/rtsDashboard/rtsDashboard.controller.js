@@ -48,6 +48,7 @@ async function getCounts(req, res, next) {
 async function getDeptWiseApplications(req, res, next) {
   try {
     const filters = {
+      ulbId: req.query.ulbId || 4,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       serviceName: req.query.serviceName || null,
@@ -75,6 +76,7 @@ async function getDeptWiseApplications(req, res, next) {
 async function getTatWisePending(req, res, next) {
   try {
       const filters = {
+        ulbId: req.query.ulbId || 4,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       serviceName: req.query.serviceName || null,
@@ -157,13 +159,13 @@ async function getApplicationStatusSummary(req, res, next) {
 async function getDetailedApplicationStatus(req, res, next) {
   try {
       const filters = {
-      fromDate: req.query.fromDate || null,
-      toDate: req.query.toDate || null,
-      serviceName: req.query.serviceName || null,
-      wardName: req.query.wardName || null,
-      officerName: req.query.officerName || null,
-      status: req.query.status || null,
-    };
+        ulbId: req.query.ulbId ? parseInt(req.query.ulbId) : null,
+        username: req.query.username || null,
+        serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
+        wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
+        fromDate: req.query.fromDate || null,
+        toDate: req.query.toDate || null,
+      };
     const data = await serviceDetailedApplicationStatus(filters);
     logApiSuccess(req, 200, data, 'Detailed Application Status Report completed');
     auditLog({

@@ -6,6 +6,7 @@ import { useLoader } from "../context/LoaderContext";
 
 export default function StatusDonut({ filters }) {
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.ULBID;
   const [statusChartData, setStatusChartData] = useState([]);
   const [statusTotal, setStatusTotal] = useState("");
 
@@ -13,6 +14,7 @@ export default function StatusDonut({ filters }) {
     try {
       setLoader(true);
       const params = new URLSearchParams();
+      if (ULBID) params.append("ulbId", ULBID);
       if (filters?.fromDate) params.append("fromDate", filters.fromDate);
       if (filters?.toDate) params.append("toDate", filters.toDate);
       if (filters?.department) params.append("wardName", filters.department);
@@ -25,39 +27,57 @@ export default function StatusDonut({ filters }) {
       const response = await apiClient.get(statusUrl);
 
       if (response.success) {
-        const total1 = Object.values(response.data).reduce((sum, row) => sum += row, 0);
+        const total1 = Object.values(response.data).reduce(
+          (sum, row) => (sum += row),
+          0,
+        );
         const updatedData = [
           {
             name: "Approved",
             value: response?.data?.APPROVED_APPLICATIONS || 0,
-            color: '#22a06b',
-            pct: String(((response?.data?.APPROVED_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+            color: "#22a06b",
+            pct:
+              String(
+                (
+                  (response?.data?.APPROVED_APPLICATIONS / total1) *
+                  100
+                ).toFixed(2),
+              ) + "%",
           },
           {
             name: "Pending",
             value: response?.data?.PENDING_APPLICATIONS || 0,
-            color: '#f4b400',
-            pct: String(((response?.data?.PENDING_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+            color: "#f4b400",
+            pct:
+              String(
+                ((response?.data?.PENDING_APPLICATIONS / total1) * 100).toFixed(
+                  2,
+                ),
+              ) + "%",
           },
-          //       { 
-          //         name: "Others",
-          //         value: response.data.OTHERS_APPLICATIONS,
-          //         color: '#ee8f1a',
-          //         pct: String(((response.data.OTHERS_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
-          //       },
           {
             name: "Rejected",
             value: response?.data?.REJECT_APPLICATIONS || 0,
-            color: '#e23b3b',
-            pct: String(((response?.data?.REJECT_APPLICATIONS / total1) * 100).toFixed(2)) + "%"
+            color: "#e23b3b",
+            pct:
+              String(
+                ((response?.data?.REJECT_APPLICATIONS / total1) * 100).toFixed(
+                  2,
+                ),
+              ) + "%",
           },
         ];
         setStatusTotal(total1);
         setStatusChartData(updatedData);
+      } else {
+        setStatusTotal(0);
+        setStatusChartData([]);
       }
     } catch (error) {
-      console.error(error);
-    } finally { 
+      console.error("Error fetching status chart data:", error);
+      setStatusTotal(0);
+      setStatusChartData([]);
+    } finally {
       setLoader(false);
     }
   };
@@ -66,8 +86,6 @@ export default function StatusDonut({ filters }) {
     if (filters) fetchStatusChartData();
   }, [filters]);
 
-
-  // const total = statusWise.reduce((s, d) => s + d.value, 0);
   return (
     <div className="card">
       <h3 className="card-title">सेवा स्थिती (Status Wise)</h3>

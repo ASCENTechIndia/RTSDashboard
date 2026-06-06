@@ -5,28 +5,28 @@ import DataTable from "./DataTable";
 
 export default function DelayedServicesTable({ filters }) {
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.VITE_ULBID;
   const [delayedServiceTableData, setDelayedServiceTableData] = useState([]);
 
   const fetchDelayedServiceData = async () => {
     setLoader(true);
     try {
       const params = new URLSearchParams();
+      if (ULBID) params.append("ulbId", ULBID);
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
       if (filters.toDate) params.append("toDate", filters.toDate);
-      if (filters.ward) params.append("wardName", filters.ward);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.type) params.append("serviceName", filters.type);
-      if (filters.officer) params.append("officerName", filters.officer);
+      if (filters.type) params.append("serviceId", filters.type);
+      if (filters.officer) params.append("username", filters.officer);
+      if (filters.department) params.append("wardId", filters.department);
 
       const queryString = params.toString();
-      const endpoint = `/rts-dashboard/servicewiseTopDelay${queryString ? `?${queryString}` : ""}`;
-
+      const endpoint = `/rts-dashboard/servicewiseTopDelay${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
       const response = await apiClient.get(endpoint);
       if (response.success && Array.isArray(response.data)) {
         const updatedData = response.data.map((item) => ({
           SERVICE_NAME: item.SERVNM,
-          DELAYED_APPLICATIONS: item.DELAYED_APPLICATIONS,
-          AVG_DELAY_DAYS: item.AVG_DELAY_DAYS,
+          DELAYED_APPLICATIONS: item.PENDING_APPLICATIONS,
+          AVG_DELAY_DAYS: `${Number(item.PERCENTAGE).toFixed(2)}%`,
         }));
         setDelayedServiceTableData(updatedData);
       } else {

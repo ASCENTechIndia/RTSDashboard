@@ -5,6 +5,7 @@ import DataTable from "./DataTable";
 
 const OfficesTable = ({ filters }) => {
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.VITE_ULBID;
   const [error, setError] = useState(null);
   const [officersData, setOfficersData] = useState([]);
 
@@ -13,12 +14,12 @@ const OfficesTable = ({ filters }) => {
       setLoader(true);
       try {
         const params = new URLSearchParams();
+        if (ULBID) params.append("ulbId", ULBID);
         if (filters.fromDate) params.append("fromDate", filters.fromDate);
         if (filters.toDate) params.append("toDate", filters.toDate);
-        if (filters.ward) params.append("wardName", filters.ward);
-        if (filters.status) params.append("status", filters.status);
-        if (filters.type) params.append("serviceName", filters.type);
-        if (filters.officer) params.append("officerName", filters.officer);
+        if (filters.type) params.append("serviceId", filters.type);
+        if (filters.officer) params.append("username", filters.officer);
+        if (filters.department) params.append("wardId", filters.department);
 
         const queryString = params.toString();
         const endpoint = `/rts-dashboard/getOfficerWork${queryString ? `?${queryString}` : ""}`;
@@ -30,7 +31,7 @@ const OfficesTable = ({ filters }) => {
             TOTAL_APPLICATIONS: item.TOTAL_APPLICATIONS,
             APPROVED_APPLICATIONS: item.APPROVED_APPLICATIONS,
             PENDING_APPLICATIONS: item.PENDING_APPLICATIONS,
-            DELAYED_APPLICATIONS: item.DELAYED_APPLICATIONS,
+            DELAYED_APPLICATIONS: item.DELAYED_APP,
           }));
           setOfficersData(data);
         } else {

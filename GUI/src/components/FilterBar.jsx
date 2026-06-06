@@ -9,6 +9,7 @@ export default function FilterBar({ filters, onFilterChange }) {
   const [statusOptions, setStatusOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.VITE_ULBID;
 
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
@@ -61,18 +62,23 @@ export default function FilterBar({ filters, onFilterChange }) {
       try {
         setLoader(true);
         const endpoints = [
-          { name: "ward", request: apiClient.get("/dropdowns/wards?ulbid=4") },
+          {
+            name: "ward",
+            request: apiClient.get(`/dropdowns/wards?ulbid=${ULBID}`),
+          },
           {
             name: "type",
-            request: apiClient.get("/dropdowns/services?ulbId=4"),
+            request: apiClient.get(`/dropdowns/services?ulbId=${ULBID}`),
           },
           {
             name: "officer",
-            request: apiClient.get("/dropdowns/users?ulbid=4"),
+            request: apiClient.get(`/dropdowns/users?ulbid=${ULBID}`),
           },
           {
             name: "status",
-            request: apiClient.get("/dropdowns/getStatusDropdown?ulbId=4"),
+            request: apiClient.get(
+              `/dropdowns/getStatusDropdown?ulbId=${ULBID}`,
+            ),
           },
         ];
 
@@ -282,7 +288,8 @@ export default function FilterBar({ filters, onFilterChange }) {
           name="officer"
           value={filters.officer}
           onChange={handleSelectChange}
-          className="filter-select"x
+          className="filter-select"
+          x
           style={{ width: "100%" }}
         >
           <option value="">सर्व</option>

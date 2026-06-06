@@ -5,6 +5,7 @@ import DataTable from "./DataTable";
 
 const WardsTable = ({ filters }) => {
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.VITE_ULBID;
   const [error, setError] = useState(null);
   const [wardsData, setWardsData] = useState([]);
 
@@ -13,15 +14,15 @@ const WardsTable = ({ filters }) => {
       setLoader(true);
       try {
         const params = new URLSearchParams();
+        if (ULBID) params.append("ulbId", ULBID);
         if (filters.fromDate) params.append("fromDate", filters.fromDate);
         if (filters.toDate) params.append("toDate", filters.toDate);
-        if (filters.ward) params.append("wardName", filters.ward);
-        if (filters.status) params.append("status", filters.status);
-        if (filters.type) params.append("serviceName", filters.type);
-        if (filters.officer) params.append("officerName", filters.officer);
+        if (filters.type) params.append("serviceId", filters.type);
+        if (filters.officer) params.append("username", filters.officer);
+        if (filters.department) params.append("wardId", filters.department);
 
         const queryString = params.toString();
-        const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;
+        const endpoint = `/rts-dashboard/getPrabhagwiseApplications${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
         const response = await apiClient.get(endpoint);
         if (response.success && Array.isArray(response.data)) {

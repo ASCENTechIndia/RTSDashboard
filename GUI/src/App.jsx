@@ -39,30 +39,27 @@ export default function App() {
         <Navbar />
         <div className="content">
           <FilterBar filters={filters} onFilterChange={handleFilterChange} />
-          <KpiRow filters={filters} />
+          {/* <KpiRow filters={filters} /> done */}
 
-          {/* Row 1 — Dept Table | TAT donut | OnTime gauge | Alerts */}
           <div className="grid-table">
-            <DepartmentTable filters={filters} />
-            <TatDonut filters={filters}/>
-            <OnTimeGauge filters={filters} />
-            <AlertsPanel />
+            <DepartmentTable filters={filters} /> 
+            <TatDonut filters={filters}/>  
+            <OnTimeGauge filters={filters} /> 
+            {/* <AlertsPanel /> */}
           </div>
 
-          {/* Row 2 — Monthly trend | Status donut | Top services | Complaints */}
           <div className="grid-4">
-            <MonthlyTrendChart filters={filters}/>
-            <StatusDonut filters={filters}/>
-            <TopServicesBar filters={filters}/>
-            <ComplaintsList />
+            <MonthlyTrendChart filters={filters}/>  
+            <StatusDonut filters={filters}/> 
+            <TopServicesBar filters={filters}/>  
+            {/* <ComplaintsList /> */}
           </div>
 
-          {/* Row 3 — Wards | Offices | Delayed services | Commissioner Summary */}
           <div className="grid-4">
-            <WardsTable filters={filters}/>
-            <OfficesTable filters={filters}/>
-            <DelayedServicesTable filters={filters}/>
-            <CommissionerSummary filters={filters}/>
+            {/* <WardsTable filters={filters}/> */}
+            {/* <OfficesTable filters={filters}/> */}
+            {/* <DelayedServicesTable filters={filters}/> */}
+            {/* <CommissionerSummary filters={filters}/> */}
           </div>
 
           <Footer />

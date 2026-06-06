@@ -129,6 +129,7 @@ async function getMonthwiseApplicationTrend(req, res, next) {
 async function getApplicationStatusSummary(req, res, next) {
   try {
     const filters = {
+      ulbId: req.query.ulbId || 4,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       serviceName: req.query.serviceName || null,

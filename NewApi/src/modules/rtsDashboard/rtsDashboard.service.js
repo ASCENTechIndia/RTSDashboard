@@ -52,6 +52,7 @@ async function serviceMonthwiseApplicationTrend(filters = {}) {
 
 async function serviceApplicationStatusSummary(filters = {}) {
   return repoApplicationStatusSummary(
+    filters.ulbId,
     filters.fromDate,
     filters.toDate,
     filters.serviceName,

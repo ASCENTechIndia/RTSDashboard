@@ -3,6 +3,8 @@ const {
   repoGetApprovedCounts,
   repoGetPendingCounts,
   repoGetDelayedCounts,
+  repoGetTodaysApplications,
+  repoGetTodaysApproved,
 } = require('./topcounts.repository');
 
 async function serviceGetTopCounts(filters = {}) {
@@ -50,9 +52,29 @@ async function serviceGetDelayedCounts(filters = {}) {
   );
 }
 
+async function serviceGetTodaysApplications(filters = {}) {
+  return repoGetTodaysApplications(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId
+  );
+}
+
+async function serviceGetTodaysApproved(filters = {}) {
+  return repoGetTodaysApproved(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId
+  );
+}
+
 module.exports = {
   serviceGetTopCounts,
   serviceGetApprovedCounts,
   serviceGetPendingCounts,
   serviceGetDelayedCounts,
+  serviceGetTodaysApplications,
+  serviceGetTodaysApproved,
 };

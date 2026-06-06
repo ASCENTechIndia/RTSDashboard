@@ -411,59 +411,43 @@ async function repoDetailedApplicationStatus(
 ) {
   const sql = `
     SELECT 
-      NVL(SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END), 0) AS approved_applications,
-      NVL(SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP','PS', 'PV') THEN 1 END), 0) AS pending_applications,
-      NVL(SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END), 0) AS reject_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
-    WHERE 1 = 1
+      NVL(SUM(CASE WHEN status IN ('approved') THEN 1 END), 0) AS approved_applications,
+      NVL(SUM(CASE WHEN status IN ('Pending') THEN 1 END), 0) AS pending_applications,
+      NVL(SUM(CASE WHEN status IN ('Reject') THEN 1 END), 0) AS reject_applications
+    FROM vw_prbhagwise_applilist
+ WHERE 1 = 1
   `;
 
   let whereClauses = ``;
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    whereClauses += ` AND officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
@@ -487,66 +471,51 @@ async function repoTopServices(
   toDate
 ) {
   const sql = `
-    SELECT 
-      var_service_eng_name AS servnm,
-      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
-    WHERE 1 = 1
+   SELECT 
+      servnm AS servnm,
+      SUM(CASE WHEN status IN ('approved') THEN 1 ELSE 0 END) AS approved_applications
+    FROM vw_prbhagwise_applilist
+  WHERE 1 = 1
   `;
 
   let whereClauses = ``;
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    whereClauses += ` AND officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
   const finalSql = sql + whereClauses + `
-    GROUP BY var_service_eng_name
+    GROUP BY servnm
     ORDER BY approved_applications DESC
     FETCH FIRST 10 ROWS ONLY
+
   `;
 
   const result = await executeQuery(finalSql, binds);

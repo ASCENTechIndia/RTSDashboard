@@ -79,7 +79,6 @@ export default function FilterBar({ filters, onFilterChange }) {
         const results = await Promise.allSettled(
           endpoints.map((e) => e.request),
         );
-
         results.forEach((result, index) => {
           const endpointName = endpoints[index].name;
           if (result.status === "fulfilled" && result.value?.success) {
@@ -88,7 +87,7 @@ export default function FilterBar({ filters, onFilterChange }) {
               setWardOptions(
                 response.data.rows.map((w) => ({
                   label: w.WARDNAME,
-                  value: w.WARDNAME,
+                  value: w.WARDID,
                 })),
               );
             } else if (endpointName === "type" && response.data?.rows) {

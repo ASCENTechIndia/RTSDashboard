@@ -48,7 +48,7 @@ export default function DepartmentTable({ filters }) {
       if (filters.department) params.append("wardId", filters.department);
 
       const queryString = params.toString();
-      const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;
+      const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
       const response = await apiClient.get(endpoint);
       if (response.success && response.data.length > 0) {

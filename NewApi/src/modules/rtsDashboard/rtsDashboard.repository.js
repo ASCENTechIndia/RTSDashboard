@@ -101,31 +101,16 @@ async function repoDeptWiseApplications(
   toDate
 ) {
   const sql = `
-    SELECT
-      d.var_dept_engname,
-      COUNT(a.var_application_appno) AS total_applications,
-      SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications,
-      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END) AS pending_applications,
+  select dept_marname var_dept_engname,
+      COUNT(appno) AS total_applications,
+      SUM(CASE WHEN status IN ('approved','Reject') THEN 1 ELSE 0 END) AS approved_applications,
+      SUM(CASE WHEN status IN ('Pending') THEN 1 ELSE 0 END) AS pending_applications,
       ROUND(
-        SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) * 100.0 /
-        NULLIF(COUNT(a.var_application_appno), 0),
+        SUM(CASE WHEN status IN ('approved','Reject') THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(appno), 0),
         2
       ) AS approved_percentage
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
+       from vw_prbhagwise_applilist
     WHERE 1 = 1
   `;
 
@@ -133,34 +118,34 @@ async function repoDeptWiseApplications(
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
   const finalSql = sql + whereClauses + `
-    GROUP BY d.var_dept_engname
+    GROUP BY dept_marname
     ORDER BY total_applications DESC
   `;
 

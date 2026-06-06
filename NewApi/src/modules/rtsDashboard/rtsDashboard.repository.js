@@ -813,39 +813,18 @@ async function repoCommissionerSummary(
   toDate
 ) {
   const sql = `
-    SELECT
-      sd.var_service_eng_name AS servnm,
-      COUNT(a.var_application_appno) AS total_applications,
-      SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications,
-      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END) AS pending_applications,
-      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV')
-                 AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15
-                 AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > NVL(sd.num_service_maxdays, 0)
-                THEN 1 ELSE 0 END) AS applications_greater15,
-      NVL(ROUND(
-        100 * SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL')
-                         AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= NVL(sd.num_service_maxdays, 0)
-                        THEN 1 ELSE 0 END) /
-        NULLIF(COUNT(CASE WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= NVL(sd.num_service_maxdays, 0) THEN 1 END), 0),
-        2
-      ), 0) AS approved_percentage
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
+    select COUNT(appno) AS total_applications,
+       SUM(approved_applications) AS approved_applications,
+       SUM(pending_applications) AS pending_applications,
+       SUM(CASE WHEN TRUNC(SYSDATE) - TRUNC(app_date) > NVL(num_service_maxdays, 0)
+         AND TRUNC(SYSDATE) - TRUNC(app_date) > 15  AND status IN ('pending')
+        THEN 1 ELSE 0 END) AS applications_greater15,
+        nvl(ROUND(100 * SUM(CASE WHEN status IN ('approved')
+                    AND TRUNC(SYSDATE) - TRUNC(app_date)<= NVL(num_service_maxdays,0) THEN 1 ELSE 0 END)/
+        NULLIF(COUNT(CASE WHEN TRUNC(SYSDATE) - TRUNC(app_date)<= NVL(num_service_maxdays,0) THEN 1 END),
+               0),2),0) AS approved_percentage
+from vw_prbhagwise_applilist
+inner join aorts_service_def on serviceid = num_service_serviceid
     WHERE 1 = 1
   `;
 
@@ -853,38 +832,36 @@ async function repoCommissionerSummary(
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    whereClauses += ` AND officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
-  const finalSql = sql + whereClauses + `
-    GROUP BY sd.var_service_eng_name
-  `;
+  const finalSql = sql + whereClauses;
 
   const result = await executeQuery(finalSql, binds);
   return result.rows || [];

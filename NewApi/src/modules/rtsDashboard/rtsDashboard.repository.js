@@ -227,7 +227,7 @@ async function repoTatWisePending(
   const result = await executeQuery(finalSql, binds);
 
   const totalPending = result.rows.reduce(
-    (sum, row) => sum + Number(row.PENDING_COUNT || 0),
+    (sum, row) => sum + Number(row.PENDING_APPLICATIONS  || 0),
     0
   );
 
@@ -239,40 +239,72 @@ async function repoTatWisePending(
 
 // Monthwise application trend
 async function repoMonthwiseApplicationTrend(
-  fromDate,
-  toDate,
-  serviceName,
-  wardName,
-  officerName,
-  status
+  ulbId,
+  username,
+  serviceId,
+  wardId
 ) {
   const sql = `
-    SELECT
-      months,
-      SUM(received_applications) AS received_applications,
-      SUM(approved_applications) AS approved_applications
-    FROM vw_monthwiseapplication_trend
+    WITH months AS (
+      SELECT ADD_MONTHS(TRUNC(SYSDATE,'MM'), -11) + INTERVAL '1' MONTH * (LEVEL - 1) AS month_start
+      FROM dual
+      CONNECT BY LEVEL <= 12
+    )
+    SELECT 
+      TO_CHAR(m.month_start, 'Mon-YYYY') AS months,
+      NVL(COUNT(a.var_application_appno), 0) AS received_applications,
+      NVL(SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END), 0) AS approved_applications
+    FROM months m
+    LEFT JOIN aorts_application_det a
+      ON TRUNC(a.dat_application_insdate, 'MM') = m.month_start
+    LEFT JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    LEFT JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    LEFT JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    LEFT JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    LEFT JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR servnm = :serviceName)
-      AND (:wardName IS NULL OR prabhag_nm = :wardName)
-      AND (:officerName IS NULL OR officer_name = :officerName)
-      AND (:status IS NULL OR status = :status)
-    GROUP BY months
-    ORDER BY MIN(app_date)
   `;
 
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
+  let whereClauses = ``;
+  const binds = {};
 
-  const result = await executeQuery(sql, binds);
+  if (ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND u.var_user_username = :username`;
+    binds.username = username;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND w.wardid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  const finalSql = sql + whereClauses + `
+    GROUP BY m.month_start
+    ORDER BY m.month_start
+  `;
+
+  const result = await executeQuery(finalSql, binds);
 
   return result.rows || [];
 }
@@ -495,38 +527,77 @@ async function repoDetailedApplicationStatus(
 
 // Top Services
 async function repoTopServices(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
   fromDate,
-  toDate,
-  serviceName,
-  wardName,
-  officerName,
-  status
+  toDate
 ) {
   const sql = `
-    SELECT
-      rank_no,
-      servnm,
-      SUM(approved_applications) AS approved_applications
-    FROM vw_top_services
+    SELECT 
+      var_service_eng_name AS servnm,
+      SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR servnm = :serviceName)
-      AND (:wardName IS NULL OR prabhag_nm = :wardName)
-      AND (:officerName IS NULL OR officer_name = :officerName)
-      AND (:status IS NULL OR status = :status)
-    GROUP BY rank_no, servnm
-    ORDER BY rank_no
   `;
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
-  const result = await executeQuery(sql, binds);
+
+  let whereClauses = ``;
+  const binds = {};
+
+  if (ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND u.var_user_username = :username`;
+    binds.username = username;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND w.wardid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    binds.toDate = toDate;
+  }
+
+  const finalSql = sql + whereClauses + `
+    GROUP BY var_service_eng_name
+    ORDER BY approved_applications DESC
+    FETCH FIRST 10 ROWS ONLY
+  `;
+
+  const result = await executeQuery(finalSql, binds);
   return result.rows || [];
 }
 

@@ -11,15 +11,12 @@ const DataTable = ({
 
   useEffect(() => {
     if (data.length > rowLimit && tbodyRef.current) {
-      // Get the first row element
       const firstRow = tbodyRef.current.querySelector("tr");
       if (firstRow) {
         const rowHeight = firstRow.offsetHeight;
-        // Set maxHeight to rowLimit * rowHeight (includes header height? We'll handle separately)
-        // We need to include thead height as well. Better to set container height based on rows + header.
         const thead = document.querySelector(".data-table-container thead");
         const headerHeight = thead ? thead.offsetHeight : 0;
-        const totalHeight = headerHeight + (rowLimit * rowHeight);
+        const totalHeight = headerHeight + rowLimit * rowHeight;
         setMaxHeight(totalHeight);
       }
     } else {
@@ -28,6 +25,7 @@ const DataTable = ({
   }, [data, rowLimit]);
 
   const hasScroll = data.length > rowLimit;
+  const equalColumnWidth = `${100 / headers.length}%`;
 
   return (
     <div className="data-table-container">
@@ -40,11 +38,15 @@ const DataTable = ({
         >
           <table
             className="table"
-            style={{ borderCollapse: "collapse", width: "100%" }}
+            style={{
+              borderCollapse: "collapse",
+              width: "100%",
+              tableLayout: "fixed", // forces equal column distribution
+            }}
           >
             <colgroup>
               {headers.map((_, idx) => (
-                <col key={idx} style={{ width: idx === 0 ? "34%" : "auto" }} />
+                <col key={idx} style={{ width: equalColumnWidth }} />
               ))}
             </colgroup>
             <thead>
@@ -55,7 +57,8 @@ const DataTable = ({
                     className="num"
                     style={{
                       textAlign: header.align || "center",
-                      whiteSpace: "nowrap",
+                      whiteSpace: "normal", // allow wrapping for long headers
+                      wordBreak: "break-word",
                     }}
                   >
                     {header.label}
@@ -69,7 +72,10 @@ const DataTable = ({
                   {headers.map((header, colIndex) => {
                     const key = keyMapping[header.label] || header.label;
                     let value = row[key];
-                    if (typeof value === "number" && header.label !== "प्रभाग") {
+                    if (
+                      typeof value === "number" &&
+                      header.label !== "प्रभाग"
+                    ) {
                       value = value.toLocaleString("en-IN");
                     }
                     if (header.label === "वेळेत (%)" && value !== undefined) {
@@ -81,8 +87,14 @@ const DataTable = ({
                         className="num"
                         style={{
                           textAlign: header.align || "center",
-                          color: header.label === "वेळेत (%)" ? "#16a34a" : "inherit",
-                          fontWeight: header.label === "वेळेत (%)" ? 600 : "normal",
+                          color:
+                            header.label === "वेळेत (%)"
+                              ? "#16a34a"
+                              : "inherit",
+                          fontWeight:
+                            header.label === "वेळेत (%)" ? 600 : "normal",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
                         }}
                       >
                         {value}

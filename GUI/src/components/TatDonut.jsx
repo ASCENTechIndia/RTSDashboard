@@ -4,17 +4,11 @@ import { tatDistribution } from "../data/dummyData";
 import apiClient from "../services/apiClient";
 import { useLoader } from "../context/LoaderContext";
 
-const colors = [
-  "#22a06b",
-  "#f4b400",
-  "#ee8f1a",
-  "#e23b3b",
-  "#7c3aed"
-]
+const colors = ["#22a06b", "#f4b400", "#ee8f1a", "#e23b3b", "#7c3aed"];
 
 export default function TatDonut({ filters }) {
   const { setLoader } = useLoader();
-
+  const ULBID = import.meta.env.VITE_ULBID;
   const [tatData, setTatData] = useState([]);
   const [tatTotal, setTatTotal] = useState("");
 
@@ -22,6 +16,8 @@ export default function TatDonut({ filters }) {
     try {
       setLoader(true);
       const params = new URLSearchParams();
+
+      if (ULBID) params.append("ulbId", ULBID);
       if (filters?.fromDate) params.append("fromDate", filters.fromDate);
       if (filters?.toDate) params.append("toDate", filters.toDate);
       if (filters?.department) params.append("wardName", filters.department);
@@ -38,9 +34,12 @@ export default function TatDonut({ filters }) {
         const total = response?.data?.totalPending;
         const updatedData = response?.data?.buckets.map((item, idx) => ({
           name: item?.DAYS_BUCKET,
-          value: item?.PENDING_COUNT,
+          value: item?.PENDING_APPLICATIONS,
           color: colors[idx % colors.length],
-          pct: String(item?.PERCENTAGE) + "%"
+          pct:
+            String(
+              Number((item?.PENDING_APPLICATIONS / total) * 100).toFixed(2),
+            ) + "%",
         }));
         setTatTotal(total);
         setTatData(updatedData);
@@ -50,11 +49,11 @@ export default function TatDonut({ filters }) {
     } finally {
       setLoader(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (filters) fetchTATData();
-  }, [filters])
+  }, [filters]);
 
   return (
     <div className="card">

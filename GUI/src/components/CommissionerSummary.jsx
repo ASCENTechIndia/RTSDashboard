@@ -41,7 +41,6 @@ export default function CommissionerSummary({ filters }) {
           setSummaryItems(items);
         } else {
           setSummaryItems([]);
-          throw new Error(response.message || "Failed to load summary");
         }
       } catch (err) {
         setSummaryItems([]);

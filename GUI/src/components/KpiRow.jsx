@@ -22,102 +22,105 @@ const iconComponents = {
   file: File,
   gear: Settings,
 };
-
+const ULBID = import.meta.env.VITE_ULBID;
 export default function KpiRow({ filters }) {
   const { setLoader } = useLoader();
-  const [kpiCards, setKpiCards] = useState([]);
+  const [totalValue, setTotalValue] = useState("");
+  const [disposedValue, setDisposedValue] = useState("");
+  const [pendingValue, setPendingValue] = useState("");
+  const [delayedValue, setDelayedValue] = useState("");
+  const [ontimeValue, setOntimeValue] = useState("");
+  const [todayReceivedValue, setTodayReceivedValue] = useState("");
+  const [todayDisposedValue, setTodayDisposedValue] = useState("");
+  const [rtsValue, setRtsValue] = useState("");
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    if (ULBID) params.append("ulbId", ULBID);
+    if (filters.fromDate) params.append("fromDate", filters.fromDate);
+    if (filters.toDate) params.append("toDate", filters.toDate);
+    if (filters.ward) params.append("wardName", filters.ward);
+    if (filters.status) params.append("status", filters.status);
+    if (filters.type) params.append("serviceId", filters.type);
+    if (filters.officer) params.append("username", filters.officer);
+    if (filters.department) params.append("wardId", filters.department);
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : "";
+  };
 
   const fetchCardsData = async () => {
     setLoader(true);
     try {
-      setLoader(true);
-      const params = new URLSearchParams();
-      if (filters.fromDate) params.append("fromDate", filters.fromDate);
-      if (filters.toDate) params.append("toDate", filters.toDate);
-      if (filters.ward) params.append("wardName", filters.ward);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.type) params.append("serviceName", filters.type);
-      if (filters.officer) params.append("officerName", filters.officer);
+      const query = buildQueryString();
 
-      const queryString = params.toString();
-      const countsEndpoint = `/rts-dashboard/counts${queryString ? `?${queryString}` : ""}`;
-      const countsResponse = await apiClient.get(countsEndpoint);
+      const endpoints = [
+        `/topcounts/totalApplications${query}`,
+        `/topcounts/approvedApplications${query}`,
+        `/topcounts/pendingApplications${query}`,
+        `/topcounts/delayedApplications${query}`,
+        `/rts-dashboard/applicationStatusSummary${query}`,
+        `/topcounts/todaysApplications${query}`,
+        `/topcounts/todaysApproved${query}`,
+        `/rts-dashboard/getRTSComplaints${query}`,
+      ];
 
-      let rtsValue = 0;
-      try {
-        const rtsResponse = await apiClient.get(
-          "/rts-dashboard/getRTSComplaints",
-        );
-        if (rtsResponse.success && rtsResponse.data && rtsResponse.data[0]) {
-          rtsValue = rtsResponse.data[0].RTS_COMPLAINTS || 0;
-        }
-      } catch (rtsErr) {
-        console.error("Error fetching RTS complaints:", rtsErr);
+      const requests = endpoints.map((url) => apiClient.get(url));
+      const results = await Promise.allSettled(requests);
+
+      if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+        const val = results[0].value.data?.total_applications ?? 0;
+        setTotalValue(val.toLocaleString("en-IN"));
+      } else {
+        setTotalValue("0");
       }
 
-      if (countsResponse.success && countsResponse.data) {
-        const d = countsResponse.data;
-        const getCount = (arr) => (arr && arr[0]?.CNT) || 0;
+      if (results[1]?.status === "fulfilled" && results[1].value?.success) {
+        const val = results[1].value.data?.approved_applications ?? 0;
+        setDisposedValue(val.toLocaleString("en-IN"));
+      } else {
+        setDisposedValue("0");
+      }
 
-        const updatedCards = [
-          {
-            id: "total",
-            icon: "doc",
-            label: "एकूण प्राप्त अर्ज",
-            value: getCount(d.total_applications),
-            color: "#2f7be3",
-          },
-          {
-            id: "disposed",
-            icon: "check",
-            label: "निकाली अर्ज",
-            value: getCount(d.approved_applications),
-            color: "#22a06b",
-          },
-          {
-            id: "pending",
-            icon: "clock",
-            label: "प्रलंबित अर्ज",
-            value: getCount(d.pending_applications),
-            color: "#ee8f1a",
-          },
-          {
-            id: "delayed",
-            icon: "alert",
-            label: "विलंबित प्रकरणे",
-            value: getCount(d.delayed_applications),
-            color: "#e23b3b",
-          },
-          {
-            id: "ontime",
-            icon: "target",
-            label: "वेळेत निकाली (%)",
-           value: `${Number(d.approved_percentage || 0).toFixed(2)}%`,
-            color: "#16a34a",
-          },
-          {
-            id: "todayReceived",
-            icon: "badge",
-            label: "आज प्राप्त अर्ज",
-            value: d.todays_applications ?? 0,
-            color: "#f0a020",
-          },
-          {
-            id: "todayDisposed",
-            icon: "file",
-            label: "आज निकाली अर्ज",
-            value: d.todays_approved ?? 0,
-            color: "#7c3aed",
-          },
-          {
-            id: "rts",
-            icon: "gear",
-            label: "RTS तक्रारी",
-            value: rtsValue,
-            color: "#0ea5a5",
-          },
-        ];
-        setKpiCards(updatedCards);
+      if (results[2]?.status === "fulfilled" && results[2].value?.success) {
+        const val = results[2].value.data?.pending_applications ?? 0;
+        setPendingValue(val.toLocaleString("en-IN"));
+      } else {
+        setPendingValue("0");
+      }
+
+      if (results[3]?.status === "fulfilled" && results[3].value?.success) {
+        const val = results[3].value.data?.delayed_applications ?? 0;
+        setDelayedValue(val.toLocaleString("en-IN"));
+      } else {
+        setDelayedValue(0);
+      }
+
+      if (results[4]?.status === "fulfilled" && results[4].value?.success) {
+        const val = results[4].value.data?.approved_percentage ?? 0;
+        setOntimeValue(`${Number(val).toFixed(2)}%`);
+      } else {
+        setOntimeValue("0%");
+      }
+
+      if (results[5]?.status === "fulfilled" && results[5].value?.success) {
+        const val = results[5].value.data?.todays_applications ?? 0;
+        setTodayReceivedValue(val.toLocaleString("en-IN"));
+      } else {
+        setTodayReceivedValue("0");
+      }
+
+      if (results[6]?.status === "fulfilled" && results[6].value?.success) {
+        const val = results[6].value.data?.todays_approved ?? 0;
+        setTodayDisposedValue(val.toLocaleString("en-IN"));
+      } else {
+        setTodayDisposedValue("0");
+      }
+
+      if (results[7]?.status === "fulfilled" && results[7].value?.success) {
+        const val = results[7].value.data?.[0]?.RTS_COMPLAINTS ?? 0;
+        setRtsValue(val.toLocaleString("en-IN"));
+      } else {
+        setRtsValue("0");
       }
     } catch (error) {
       console.error("Error fetching KPI data:", error);
@@ -129,6 +132,65 @@ export default function KpiRow({ filters }) {
   useEffect(() => {
     fetchCardsData();
   }, [filters]);
+
+  const kpiCards = [
+    {
+      id: "total",
+      icon: "doc",
+      label: "एकूण प्राप्त अर्ज",
+      value: totalValue,
+      color: "#2f7be3",
+    },
+    {
+      id: "disposed",
+      icon: "check",
+      label: "निकाली अर्ज",
+      value: disposedValue,
+      color: "#22a06b",
+    },
+    {
+      id: "pending",
+      icon: "clock",
+      label: "प्रलंबित अर्ज",
+      value: pendingValue,
+      color: "#ee8f1a",
+    },
+    {
+      id: "delayed",
+      icon: "alert",
+      label: "विलंबित प्रकरणे",
+      value: delayedValue,
+      color: "#e23b3b",
+    },
+    {
+      id: "ontime",
+      icon: "target",
+      label: "वेळेत निकाली (%)",
+      value: ontimeValue,
+      color: "#16a34a",
+    },
+    {
+      id: "todayReceived",
+      icon: "badge",
+      label: "आज प्राप्त अर्ज",
+      value: todayReceivedValue,
+      color: "#f0a020",
+    },
+    {
+      id: "todayDisposed",
+      icon: "file",
+      label: "आज निकाली अर्ज",
+      value: todayDisposedValue,
+      color: "#7c3aed",
+    },
+    {
+      id: "rts",
+      icon: "gear",
+      label: "RTS तक्रारी",
+      value: rtsValue,
+      color: "#0ea5a5",
+    },
+  ];
 
   return (
     <div className="kpi-row">

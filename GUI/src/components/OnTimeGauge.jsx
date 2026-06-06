@@ -22,7 +22,7 @@ export default function OnTimeGauge({ filters }) {
       if (filters.officer) params.append("officerName", filters.officer);
 
       const queryString = params.toString();
-      const endpoint = `/rts-dashboard/applicationStatusSummary${queryString ? `?${queryString}` : ""}`;
+      const endpoint = `/rts-dashboard/applicationStatusSummary${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
       const response = await apiClient.get(endpoint);
 

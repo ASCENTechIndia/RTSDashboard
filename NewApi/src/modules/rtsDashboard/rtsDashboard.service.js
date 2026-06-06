@@ -112,12 +112,12 @@ async function servicePrabhagwiseApplications(filters = {}) {
 
 async function serviceCommissionerSummary(filters = {}) {
   return repoCommissionerSummary(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
     filters.fromDate,
-    filters.toDate,
-    filters.serviceName,
-    filters.wardName,
-    filters.officerName,
-    filters.status
+    filters.toDate
   );
 }
 

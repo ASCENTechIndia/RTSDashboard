@@ -21,7 +21,7 @@ function createApp() {
       // origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map((x) => x.trim()),
       origin: [
     'http://localhost:5173',
-    'https://rtsdashboard.nagarkaryavalinew.com',
+    'http://rtsdashboard.dhulecorporation.in',
     'http://192.168.1.23:5173'
   ],
       credentials: true,

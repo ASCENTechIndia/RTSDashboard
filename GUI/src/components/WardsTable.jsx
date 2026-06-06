@@ -26,7 +26,8 @@ const WardsTable = ({ filters }) => {
 
         const response = await apiClient.get(endpoint);
         if (response.success && Array.isArray(response.data)) {
-          const data = response.data.map((item) => ({
+          const data = response.data.map((item, i) => ({
+            srNo: i+1,
             WARDNAME: item.PRABHAG_NM,
             TOTAL_APPLICATIONS: item.TOTAL_APPLICATIONS,
             APPROVED_APPLICATIONS: item.APPROVED_APPLICATIONS,
@@ -52,6 +53,7 @@ const WardsTable = ({ filters }) => {
   if (error) return <div className="card">Error: {error}</div>;
 
   const headers = [
+    {label: "Sr. No", align: "center"},
     { label: "प्रभाग", align: "left" },
     { label: "प्राप्त अर्ज", align: "right" },
     { label: "निकाली", align: "right" },
@@ -60,6 +62,7 @@ const WardsTable = ({ filters }) => {
   ];
 
   const keyMapping = {
+    "Sr. No": "srNo",
     प्रभाग: "WARDNAME",
     "प्राप्त अर्ज": "TOTAL_APPLICATIONS",
     निकाली: "APPROVED_APPLICATIONS",

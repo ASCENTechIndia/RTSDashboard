@@ -29,7 +29,6 @@ export default function MonthlyTrendChart({ filters }) {
       const queryString = params.toString();
       const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
       const response = await apiClient.get(monthTrendUrl);
-
       if (
         response.success &&
         Array.isArray(response.data) &&

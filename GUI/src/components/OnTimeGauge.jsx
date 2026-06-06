@@ -25,7 +25,6 @@ export default function OnTimeGauge({ filters }) {
       const endpoint = `/rts-dashboard/applicationStatusSummary${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 
       const response = await apiClient.get(endpoint);
-
       if (response.success) {
         const apr = Number(
           response.data.resolved_pending.approved_applications || 0,
@@ -63,7 +62,11 @@ export default function OnTimeGauge({ filters }) {
 
   const gaugeData = [
     { name: "वेळेत", value: parseFloat(approvedPercentage), color: "#22a06b" },
-    { name: "विलंबित", value: parseFloat(100 - approvedPercentage), color: "#e23b3b" },
+    {
+      name: "विलंबित",
+      value: parseFloat(100 - approvedPercentage),
+      color: "#e23b3b",
+    },
   ];
 
   const pieData = [

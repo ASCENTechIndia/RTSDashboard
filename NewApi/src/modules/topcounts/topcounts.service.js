@@ -9,7 +9,8 @@ async function serviceGetTopCounts(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 

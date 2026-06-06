@@ -7,6 +7,7 @@ const getTopCountsSchema = Joi.object({
   wardId: Joi.number().optional(),
   fromDate: Joi.string().optional(),
   toDate: Joi.string().optional(),
+  status: Joi.string().optional(),
 });
 
 module.exports = {

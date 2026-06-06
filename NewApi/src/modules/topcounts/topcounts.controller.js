@@ -22,6 +22,7 @@ async function getTopCounts(req, res, next) {
       wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
+      status: req.query.status || null,
     };
 
     const data = await serviceGetTopCounts(filters);

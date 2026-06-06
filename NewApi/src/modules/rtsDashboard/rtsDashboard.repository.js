@@ -233,6 +233,7 @@ async function repoMonthwiseApplicationTrend(
 
 // Application Status Summary - Approved vs Pending
 async function repoApplicationStatusSummary(
+  ulbId,
   fromDate,
   toDate,
   serviceName,
@@ -250,22 +251,97 @@ async function repoApplicationStatusSummary(
   `;
 
   const approvedSql = `
-    SELECT ROUND(AVG(approved_percentage), 2) AS approved_percentage
-    FROM vw_withintime_perc
+    SELECT NVL(
+      ROUND(
+        SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 END) * 100.0 / COUNT(a.var_application_appno),
+        2
+      ),
+      0
+    ) AS approved_percentage
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-    ${commonFilters}
+    AND a.num_application_ulbid = :ulbId
+      AND (:fromDate IS NULL OR TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR sd.var_service_eng_name = :serviceName)
+      AND (:wardName IS NULL OR w.wardname = :wardName)
+      AND (:officerName IS NULL OR u.var_user_username = :officerName)
+      AND (:status IS NULL OR (
+        CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 'Approved'
+             WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 'Pending'
+             WHEN a.var_application_status IN ('CR','DN') THEN 'Reject'
+        END
+      ) = :status)
+      AND TRUNC(sysdate) - TRUNC(a.dat_application_insdate) <= sd.num_service_maxdays
   `;
 
   const resolvedPendingSql = `
-    SELECT
-      SUM(approved_applications) AS approved_applications,
-      SUM(pending_applications) AS pending_applications
-    FROM vw_resolvedpending_applications
-    WHERE 1 = 1
-    ${commonFilters}
-  `;
+  SELECT
+    NVL(SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END),0)
+      AS approved_applications,
+
+    NVL(SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END),0)
+      AS pending_applications
+
+  FROM aorts_application_det a
+  INNER JOIN aorts_applicant_infodet infodet  
+    ON infodet.var_appl_appno = a.var_application_appno
+    AND infodet.num_appl_serviceid = a.num_application_serviceid
+    AND infodet.num_appl_ulbid = a.num_application_ulbid
+
+  INNER JOIN aorts_service_def sd
+    ON sd.num_service_serviceid = a.num_application_serviceid
+
+  LEFT JOIN aorts_service_config sc
+    ON sc.num_serv_servid = sd.num_service_serviceid
+    AND sc.num_serv_deptid = sd.num_service_deptid
+    AND sc.num_serv_ulbid = a.num_application_ulbid
+
+  INNER JOIN admins.aoms_dept_mas d
+    ON d.num_dept_id = a.num_application_deptid
+
+  INNER JOIN admins.aoma_user_def u
+    ON d.num_dept_id = u.num_user_deptid
+
+  INNER JOIN prop.vw_ward_mas w
+    ON w.wardid = a.num_application_zoneid
+
+  WHERE 1 = 1
+    AND a.num_application_ulbid = :ulbId
+    AND (:fromDate IS NULL OR TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+    AND (:toDate IS NULL OR TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate,'DD-MON-YYYY'))
+    AND (:serviceName IS NULL OR sd.var_service_eng_name = :serviceName)
+    AND (:wardName IS NULL OR w.wardname = :wardName)
+    AND (:officerName IS NULL OR u.var_user_username = :officerName)
+    AND (
+      :status IS NULL OR (
+        CASE 
+          WHEN a.var_application_status IN ('NW','AP','DL') THEN 'Approved'
+          WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 'Pending'
+          WHEN a.var_application_status IN ('CR','DN') THEN 'Reject'
+        END
+      ) = :status
+    )
+`;
 
   const binds = {
+    ulbId:ulbId,
     fromDate: fromDate || null,
     toDate: toDate || null,
     serviceName: serviceName || null,

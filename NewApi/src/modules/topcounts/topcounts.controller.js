@@ -3,6 +3,8 @@ const {
   serviceGetApprovedCounts,
   serviceGetPendingCounts,
   serviceGetDelayedCounts,
+  serviceGetTodaysApplications,
+  serviceGetTodaysApproved,
 } = require('./topcounts.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -116,9 +118,55 @@ async function getDelayedCounts(req, res, next) {
   }
 }
 
+async function getTodaysApplications(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetTodaysApplications(filters);
+
+    logApiSuccess(req, 200, data, 'Today\'s Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_TODAYS_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Today\'s Applications Count Report error');
+    return next(error);
+  }
+}
+
+async function getTodaysApproved(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetTodaysApproved(filters);
+
+    logApiSuccess(req, 200, data, 'Today\'s Approved Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_TODAYS_APPROVED',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Today\'s Approved Applications Count Report error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getTopCounts,
   getApprovedCounts,
   getPendingCounts,
   getDelayedCounts,
+  getTodaysApplications,
+  getTodaysApproved,
 };

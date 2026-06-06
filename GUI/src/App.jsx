@@ -42,24 +42,24 @@ export default function App() {
           {/* <KpiRow filters={filters} /> done */}
 
           <div className="grid-table">
-            <DepartmentTable filters={filters} /> 
-            <TatDonut filters={filters}/>  
-            <OnTimeGauge filters={filters} /> 
+            {/* <DepartmentTable filters={filters} /> done */}
+            {/* <TatDonut filters={filters}/>  done */}
+            {/* <OnTimeGauge filters={filters} /> done */}
             {/* <AlertsPanel /> */}
           </div>
 
           <div className="grid-4">
-            <MonthlyTrendChart filters={filters}/>  
-            <StatusDonut filters={filters}/> 
-            <TopServicesBar filters={filters}/>  
-            {/* <ComplaintsList /> */}
+            {/* <MonthlyTrendChart filters={filters}/>  done*/}
+            {/* <StatusDonut filters={filters}/> done */}
+            {/* <TopServicesBar filters={filters}/>  done */}
+            {/* <ComplaintsList /> */}  
           </div>
 
           <div className="grid-4">
-            {/* <WardsTable filters={filters}/> */}
-            {/* <OfficesTable filters={filters}/> */}
-            {/* <DelayedServicesTable filters={filters}/> */}
-            {/* <CommissionerSummary filters={filters}/> */}
+            {/* <WardsTable filters={filters}/> done */}
+            {/* <OfficesTable filters={filters}/> done */}
+            {/* <DelayedServicesTable filters={filters}/> done */}
+            <CommissionerSummary filters={filters}/>
           </div>
 
           <Footer />

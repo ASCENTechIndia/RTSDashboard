@@ -22,7 +22,7 @@ const iconComponents = {
   file: File,
   gear: Settings,
 };
-const ULBID = import.meta.env.ULBID;
+const ULBID = import.meta.env.VITE_ULBID;
 export default function KpiRow({ filters }) {
   const { setLoader } = useLoader();
   const [totalValue, setTotalValue] = useState("");

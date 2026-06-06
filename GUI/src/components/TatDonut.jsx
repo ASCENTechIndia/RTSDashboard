@@ -8,7 +8,7 @@ const colors = ["#22a06b", "#f4b400", "#ee8f1a", "#e23b3b", "#7c3aed"];
 
 export default function TatDonut({ filters }) {
   const { setLoader } = useLoader();
-  const ULBID = import.meta.env.ULBID;
+  const ULBID = import.meta.env.VITE_ULBID;
   const [tatData, setTatData] = useState([]);
   const [tatTotal, setTatTotal] = useState("");
 

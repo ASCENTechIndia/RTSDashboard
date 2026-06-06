@@ -6,7 +6,7 @@ import { useLoader } from "../context/LoaderContext";
 
 export default function StatusDonut({ filters }) {
   const { setLoader } = useLoader();
-  const ULBID = import.meta.env.ULBID;
+  const ULBID = import.meta.env.VITE_ULBID;
   const [statusChartData, setStatusChartData] = useState([]);
   const [statusTotal, setStatusTotal] = useState("");
 

@@ -33,7 +33,7 @@ const newIconMap = {
 
 export default function DepartmentTable({ filters }) {
   const { setLoader } = useLoader();
-  const ULBID = import.meta.env.ULBID;
+  const ULBID = import.meta.env.VITE_ULBID;
   const [departmentWiseData, setDepartmentWiseData] = useState([]);
 
   const fetchDepartmentWiseData = async () => {

@@ -124,8 +124,6 @@ async function repoDeptWiseApplications(
       AND sc.num_serv_ulbid = a.num_application_ulbid
     INNER JOIN admins.aoms_dept_mas d
       ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
     INNER JOIN prop.vw_ward_mas w
       ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
@@ -139,10 +137,7 @@ async function repoDeptWiseApplications(
     binds.ulbId = ulbId;
   }
 
-  if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
-    binds.username = username;
-  }
+  
 
   if (serviceId != null) {
     whereClauses += ` AND sd.num_service_serviceid = :serviceId`;

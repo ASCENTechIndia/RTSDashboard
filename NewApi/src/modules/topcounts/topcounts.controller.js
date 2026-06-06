@@ -2,6 +2,7 @@ const {
   serviceGetTopCounts,
   serviceGetApprovedCounts,
   serviceGetPendingCounts,
+  serviceGetDelayedCounts,
 } = require('./topcounts.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -93,8 +94,31 @@ async function getPendingCounts(req, res, next) {
   }
 }
 
+async function getDelayedCounts(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetDelayedCounts(filters);
+
+    logApiSuccess(req, 200, data, 'Delayed Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_DELAYED_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Delayed Applications Count Report error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getTopCounts,
   getApprovedCounts,
   getPendingCounts,
+  getDelayedCounts,
 };

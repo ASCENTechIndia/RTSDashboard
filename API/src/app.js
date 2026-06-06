@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-
+// const rateLimit = require('express-rate-limit');
+const cookieParser = require("cookie-parser");
 const { config, validateConfig } = require('./config/env');
 const routes = require('./routes');
 const { notFoundHandler, errorHandler } = require('./middleware/error-handler');
@@ -17,8 +17,8 @@ function createApp() {
   app.use(helmet());
  const allowedOrigins = [
    "http://localhost:5173",
-  "https://rtsdashboard.nagarkaryavalinewuat.com",
-  "https://nagarkaryavalinewuat.com",
+  "https://rtsdashboard.nagarkaryavalinew.com",
+  "https://nagarkaryavalinew.com",
 ];
 
 app.use(
@@ -33,6 +33,8 @@ app.use(
     credentials: true,
   })
 );
+  app.use(cookieParser());
+
   app.use(compression());
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));

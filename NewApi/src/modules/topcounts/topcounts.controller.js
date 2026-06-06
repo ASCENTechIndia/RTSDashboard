@@ -1,5 +1,8 @@
 const {
   serviceGetTopCounts,
+  serviceGetApprovedCounts,
+  serviceGetPendingCounts,
+  serviceGetDelayedCounts,
 } = require('./topcounts.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -12,19 +15,22 @@ function requestMeta(req) {
   };
 }
 
+function buildFilters(req) {
+  const ulbId = req.query.ulbId || null;
+  return {
+    ulbId: ulbId ? parseInt(ulbId, 10) : null,
+    username: req.query.username || null,
+    serviceId: req.query.serviceId ? parseInt(req.query.serviceId, 10) : null,
+    wardId: req.query.wardId ? parseInt(req.query.wardId, 10) : null,
+    fromDate: req.query.fromDate || null,
+    toDate: req.query.toDate || null,
+    status: req.query.status || null,
+  };
+}
+
 async function getTopCounts(req, res, next) {
   try {
-    const ulbId = req.query.ulbId ||  null;
-    const filters = {
-      ulbId: ulbId ? parseInt(ulbId) : null,
-      username: req.query.username || null,
-      serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
-      wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
-      fromDate: req.query.fromDate || null,
-      toDate: req.query.toDate || null,
-      status: req.query.status || null,
-    };
-
+    const filters = buildFilters(req);
     const data = await serviceGetTopCounts(filters);
 
     logApiSuccess(req, 200, data, 'Total Applications Count Report completed');
@@ -44,6 +50,75 @@ async function getTopCounts(req, res, next) {
   }
 }
 
+async function getApprovedCounts(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetApprovedCounts(filters);
+
+    logApiSuccess(req, 200, data, 'Approved Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_APPROVED_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Approved Applications Count Report error');
+    return next(error);
+  }
+}
+
+async function getPendingCounts(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetPendingCounts(filters);
+
+    logApiSuccess(req, 200, data, 'Pending Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_PENDING_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Pending Applications Count Report error');
+    return next(error);
+  }
+}
+
+async function getDelayedCounts(req, res, next) {
+  try {
+    const filters = buildFilters(req);
+    const data = await serviceGetDelayedCounts(filters);
+
+    logApiSuccess(req, 200, data, 'Delayed Applications Count Report completed');
+    auditLog({
+      action: 'TOP_COUNTS_DELAYED_APPLICATIONS',
+      actor: req.user?.userId || 'system',
+      module: 'topcounts',
+      status: 'SUCCESS',
+      details: { filters, result: data },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Delayed Applications Count Report error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getTopCounts,
+  getApprovedCounts,
+  getPendingCounts,
+  getDelayedCounts,
 };

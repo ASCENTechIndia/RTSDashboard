@@ -25,8 +25,8 @@ export default function DelayedServicesTable({ filters }) {
       if (response.success && Array.isArray(response.data)) {
         const updatedData = response.data.map((item) => ({
           SERVICE_NAME: item.SERVNM,
-          DELAYED_APPLICATIONS: item.DELAYED_APPLICATIONS,
-          AVG_DELAY_DAYS: item.AVG_DELAY_DAYS,
+          DELAYED_APPLICATIONS: item.PENDING_APPLICATIONS,
+          AVG_DELAY_DAYS: `${Number(item.PERCENTAGE).toFixed(2)}%`,
         }));
         setDelayedServiceTableData(updatedData);
       } else {

@@ -166,70 +166,56 @@ async function repoTatWisePending(
  const sql = `
     SELECT 
       CASE 
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
       END AS days_bucket,
-      COUNT(a.var_application_appno) AS pending_applications
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
-    WHERE a.var_application_status IN ('CP', 'IP', 'VP', 'PP', 'PS', 'PV')
-      AND 1 = 1
+      COUNT(appno) AS pending_applications
+    FROM vw_prbhagwise_applilist
+    inner join aorts_service_def on serviceid = num_service_serviceid
+    WHERE status IN ('Pending')
+      AND 1 = 1 
+ 
   `;
 
   let whereClauses = ``;
   const binds = {};
   if(ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
      binds.ulbId = ulbId;}
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
   }
 
   if (serviceName) {
-    whereClauses += ` AND sd.var_service_eng_name = :serviceName`;
+    whereClauses += ` AND serviceid = :serviceName`;
     binds.serviceName = serviceName;
   }
 
   if (wardName) {
-    whereClauses += ` AND w.wardname = :wardName`;
+    whereClauses += ` AND wardid = :wardName`;
     binds.wardName = wardName;
   }
 
   if (officerName) {
-    whereClauses += ` AND u.var_user_username = :officerName`;
+    whereClauses += ` AND officer_name = :officerName`;
     binds.officerName = officerName;
   }
 
   const finalSql = sql + whereClauses + `
-    GROUP BY 
+   GROUP BY 
       CASE 
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
       END
     ORDER BY
@@ -262,34 +248,19 @@ async function repoMonthwiseApplicationTrend(
   wardId
 ) {
   const sql = `
-    WITH months AS (
+   WITH months AS (
       SELECT ADD_MONTHS(TRUNC(SYSDATE,'MM'), -11) + INTERVAL '1' MONTH * (LEVEL - 1) AS month_start
       FROM dual
       CONNECT BY LEVEL <= 12
     )
     SELECT 
       TO_CHAR(m.month_start, 'Mon-YYYY') AS months,
-      NVL(COUNT(a.var_application_appno), 0) AS received_applications,
-      NVL(SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END), 0) AS approved_applications
+      NVL(COUNT(appno), 0) AS received_applications,
+      NVL(SUM(CASE WHEN status IN ('approved') THEN 1 ELSE 0 END), 0) 
+      AS approved_applications
     FROM months m
-    LEFT JOIN aorts_application_det a
-      ON TRUNC(a.dat_application_insdate, 'MM') = m.month_start
-    LEFT JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    LEFT JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    LEFT JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    LEFT JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    LEFT JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
+    LEFT JOIN vw_prbhagwise_applilist
+    ON TRUNC(app_date, 'MM') = m.month_start
     WHERE 1 = 1
   `;
 
@@ -297,22 +268,22 @@ async function repoMonthwiseApplicationTrend(
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    whereClauses += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    whereClauses += ` AND officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    whereClauses += ` AND wardid = :wardId`;
     binds.wardId = wardId;
   }
 
@@ -346,93 +317,57 @@ async function repoApplicationStatusSummary(
   `;
 
   const approvedSql = `
-    SELECT NVL(
+   SELECT NVL(
       ROUND(
-        SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 END) * 100.0 / COUNT(a.var_application_appno),
+        SUM(CASE WHEN status IN ('approved') THEN 1 END) * 100.0 / COUNT(appno),
         2
       ),
       0
     ) AS approved_percentage
-    FROM aorts_application_det a
-    INNER JOIN aorts_applicant_infodet infodet
-      ON infodet.var_appl_appno = a.var_application_appno
-      AND infodet.num_appl_serviceid = a.num_application_serviceid
-      AND infodet.num_appl_ulbid = a.num_application_ulbid
-    INNER JOIN aorts_service_def sd
-      ON sd.num_service_serviceid = a.num_application_serviceid
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-      AND sc.num_serv_ulbid = a.num_application_ulbid
-    INNER JOIN admins.aoms_dept_mas d
-      ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u
-      ON d.num_dept_id = u.num_user_deptid
-    INNER JOIN prop.vw_ward_mas w
-      ON w.wardid = a.num_application_zoneid
+    FROM  vw_prbhagwise_applilist
+    inner join aorts_service_def on serviceid = num_service_serviceid
     WHERE 1 = 1
-    AND a.num_application_ulbid = :ulbId
-      AND (:fromDate IS NULL OR TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR sd.var_service_eng_name = :serviceName)
-      AND (:wardName IS NULL OR w.wardname = :wardName)
-      AND (:officerName IS NULL OR u.var_user_username = :officerName)
+    AND ulbid = :ulbId
+     AND (:fromDate IS NULL OR TRUNC(app_date) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR serviceid = :serviceName)
+      AND (:wardName IS NULL OR wardid = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
       AND (:status IS NULL OR (
-        CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 'Approved'
-             WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 'Pending'
-             WHEN a.var_application_status IN ('CR','DN') THEN 'Reject'
+        CASE WHEN status IN ('approved') THEN 'Approved'
+             WHEN status IN ('Pending') THEN 'Pending'
+             WHEN status IN ('Reject') THEN 'Reject'
         END
       ) = :status)
-      AND TRUNC(sysdate) - TRUNC(a.dat_application_insdate) <= sd.num_service_maxdays
-  `;
+
+      AND nvl (TRUNC(recieptdate),sysdate) - TRUNC(app_date) <= num_service_maxdays
+ `;
 
   const resolvedPendingSql = `
-  SELECT
-    NVL(SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END),0)
+  SELECT 
+     NVL(SUM(CASE WHEN status IN ('approved','Reject') THEN 1 ELSE 0 END),0)
       AS approved_applications,
 
-    NVL(SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END),0)
+    NVL(SUM(CASE WHEN status IN ('Pending') THEN 1 ELSE 0 END),0)
       AS pending_applications
 
-  FROM aorts_application_det a
-  INNER JOIN aorts_applicant_infodet infodet  
-    ON infodet.var_appl_appno = a.var_application_appno
-    AND infodet.num_appl_serviceid = a.num_application_serviceid
-    AND infodet.num_appl_ulbid = a.num_application_ulbid
-
-  INNER JOIN aorts_service_def sd
-    ON sd.num_service_serviceid = a.num_application_serviceid
-
-  LEFT JOIN aorts_service_config sc
-    ON sc.num_serv_servid = sd.num_service_serviceid
-    AND sc.num_serv_deptid = sd.num_service_deptid
-    AND sc.num_serv_ulbid = a.num_application_ulbid
-
-  INNER JOIN admins.aoms_dept_mas d
-    ON d.num_dept_id = a.num_application_deptid
-
-  INNER JOIN admins.aoma_user_def u
-    ON d.num_dept_id = u.num_user_deptid
-
-  INNER JOIN prop.vw_ward_mas w
-    ON w.wardid = a.num_application_zoneid
-
-  WHERE 1 = 1
-    AND a.num_application_ulbid = :ulbId
-    AND (:fromDate IS NULL OR TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-    AND (:toDate IS NULL OR TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate,'DD-MON-YYYY'))
-    AND (:serviceName IS NULL OR sd.var_service_eng_name = :serviceName)
-    AND (:wardName IS NULL OR w.wardname = :wardName)
-    AND (:officerName IS NULL OR u.var_user_username = :officerName)
-    AND (
-      :status IS NULL OR (
-        CASE 
-          WHEN a.var_application_status IN ('NW','AP','DL') THEN 'Approved'
-          WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 'Pending'
-          WHEN a.var_application_status IN ('CR','DN') THEN 'Reject'
+    FROM  vw_prbhagwise_applilist
+    inner join aorts_service_def on serviceid = num_service_serviceid
+    WHERE 1 = 1
+    AND ulbid = :ulbId
+     AND (:fromDate IS NULL OR TRUNC(app_date) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
+      AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
+      AND (:serviceName IS NULL OR serviceid = :serviceName)
+      AND (:wardName IS NULL OR wardid = :wardName)
+      AND (:officerName IS NULL OR officer_name = :officerName)
+      AND (:status IS NULL OR (
+        CASE WHEN status IN ('approved') THEN 'Approved'
+             WHEN status IN ('Pending') THEN 'Pending'
+             WHEN status IN ('Reject') THEN 'Reject'
         END
-      ) = :status
-    )
+      ) = :status)
+      AND nvl (TRUNC(recieptdate),sysdate) - TRUNC(app_date) <= num_service_maxdays
+
 `;
 
   const binds = {

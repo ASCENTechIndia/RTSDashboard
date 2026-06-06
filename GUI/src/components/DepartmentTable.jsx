@@ -33,19 +33,19 @@ const newIconMap = {
 
 export default function DepartmentTable({ filters }) {
   const { setLoader } = useLoader();
+  const ULBID = import.meta.env.ULBID;
   const [departmentWiseData, setDepartmentWiseData] = useState([]);
 
   const fetchDepartmentWiseData = async () => {
     setLoader(true);
     try {
       const params = new URLSearchParams();
+      if (ULBID) params.append("ulbId", ULBID);
+      if (filters.officer) params.append("username", filters.officer);
+      if (filters.type) params.append("serviceId", filters.type);
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
       if (filters.toDate) params.append("toDate", filters.toDate);
-      if (filters.ward) params.append("wardName", filters.ward);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.type) params.append("serviceName", filters.type);
-      if (filters.officer) params.append("officerName", filters.officer);
-      if(filters.department) params.append("department", filters.department)
+      if (filters.department) params.append("wardId", filters.department);
 
       const queryString = params.toString();
       const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString}` : ""}`;

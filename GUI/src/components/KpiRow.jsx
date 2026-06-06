@@ -220,7 +220,7 @@ export default function KpiRow({ filters }) {
   ];
 
   return (
-    <div className="kpi-row">
+    <div className="kpi-row card">
       {kpiCards.map((k) => {
         const IconComponent = iconComponents[k.icon] || FileText;
         return (
@@ -231,8 +231,8 @@ export default function KpiRow({ filters }) {
               </div>
               <div className="kpi-value">
                 <span
-                  className="label"
-                  style={{ color: k.color, fontSize: "11px" }}
+                  className="kpi-row-title"
+                  style={{ color: k.color, fontSize: "10px" }}
                 >
                   {k.label}
                 </span>

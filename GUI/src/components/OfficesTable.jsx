@@ -78,7 +78,7 @@ const OfficesTable = ({ filters }) => {
         headers={headers}
         data={officersData}
         keyMapping={keyMapping}
-        rowLimit={7}
+        rowLimit={8}
       />
     </div>
   );

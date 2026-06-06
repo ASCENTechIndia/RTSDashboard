@@ -80,7 +80,7 @@ const WardsTable = ({ filters }) => {
         headers={headers}
         data={wardsData}
         keyMapping={keyMapping}
-        rowLimit={7}
+        rowLimit={8}
       />
     </div>
   );

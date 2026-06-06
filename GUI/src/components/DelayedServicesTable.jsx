@@ -64,6 +64,7 @@ export default function DelayedServicesTable({ filters }) {
           headers={headers}
           data={delayedServiceTableData}
           keyMapping={keyMapping}
+          rowLimit={5}
         />
       </div>
     </div>

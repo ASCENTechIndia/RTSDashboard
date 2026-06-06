@@ -11,6 +11,7 @@ const colorMap = {
 
 export default function AlertsPanel() {
   const [loading, setLoading] = useState(true);
+  const ULBID = import.meta.env.VITE_ULBID
   const [error, setError] = useState(null);
   const [alertsData, setAlertsData] = useState({
     critical: 0,     
@@ -21,7 +22,8 @@ export default function AlertsPanel() {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const response = await apiClient.get("/rts-dashboard/getAlerts?ulbId=4");
+        const response = await apiClient.get(`/rts-dashboard/getAlerts?ulbId=${ULBID}`);
+        console.log("res ", response)
         if (response.success && response.data) {
           const pendingBuckets = response.data.pendingBuckets || [];
           const approved = response.data.approvedApplications || 0;
@@ -30,9 +32,9 @@ export default function AlertsPanel() {
           let warning = 0;
           pendingBuckets.forEach((bucket) => {
             if (bucket.DAYS_BUCKET === "15+ days") {
-              critical = bucket.PENDING_APPLICATIONS || 0;
+              critical = bucket.APPLICATIONS_COUNT || 0;
             } else if (bucket.DAYS_BUCKET === "4-15 days") {
-              warning = bucket.PENDING_APPLICATIONS || 0;
+              warning = bucket.APPLICATIONS_COUNT || 0;
             }
           });
 

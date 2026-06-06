@@ -92,8 +92,9 @@ const todayApprovedResult = await executeQuery(todayApprovedSql, binds);
   };
 }
 
-// Deptwise applications view
+// Deptwise applications view - Pending applications by days bucket
 async function repoDeptWiseApplications(
+  ulbId,
   fromDate,
   toDate,
   serviceName,
@@ -101,7 +102,7 @@ async function repoDeptWiseApplications(
   officerName,
   status
 ) {
-  const sql = `
+    const sql = `
     SELECT
       officer_name,
       servnm,
@@ -137,6 +138,7 @@ async function repoDeptWiseApplications(
 
 // TAT wise pending applications
 async function repoTatWisePending(
+    ulbId,
   fromDate,
   toDate,
   serviceName,
@@ -144,41 +146,85 @@ async function repoTatWisePending(
   officerName,
   status
 ) {
-  const sql = `SELECT
-    days_bucket,
-    SUM(pending_applications) AS pending_count,
-    ROUND(
-        SUM(pending_applications) * 100 /
-        SUM(SUM(pending_applications)) OVER (),
-        2
-    ) AS percentage
-FROM vw_tatwise_pending
-WHERE 1 = 1
-  AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-  AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-  AND (:serviceName IS NULL OR servnm = :serviceName)
-  AND (:wardName IS NULL OR prabhag_nm = :wardName)
-  AND (:officerName IS NULL OR officer_name = :officerName)
-  AND (:status IS NULL OR status = :status)
-GROUP BY days_bucket
-ORDER BY
-  CASE days_bucket
-    WHEN '0 - 3' THEN 1
-    WHEN '4 - 7' THEN 2
-    WHEN '8 - 15' THEN 3
-    WHEN '15+' THEN 4
-  END`;
+ const sql = `
+    SELECT 
+      CASE 
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        ELSE '15+ days'
+      END AS days_bucket,
+      COUNT(a.var_application_appno) AS pending_applications
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
+    WHERE a.var_application_status IN ('CP', 'IP', 'VP', 'PP', 'PS', 'PV')
+      AND 1 = 1
+  `;
 
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
+  let whereClauses = ``;
+  const binds = {};
+  if(ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+     binds.ulbId = ulbId;}
 
-  const result = await executeQuery(sql, binds);
+  if (fromDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    binds.toDate = toDate;
+  }
+
+  if (serviceName) {
+    whereClauses += ` AND sd.var_service_eng_name = :serviceName`;
+    binds.serviceName = serviceName;
+  }
+
+  if (wardName) {
+    whereClauses += ` AND w.wardname = :wardName`;
+    binds.wardName = wardName;
+  }
+
+  if (officerName) {
+    whereClauses += ` AND u.var_user_username = :officerName`;
+    binds.officerName = officerName;
+  }
+
+  const finalSql = sql + whereClauses + `
+    GROUP BY 
+      CASE 
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) BETWEEN 8 AND 15 THEN '8-15 days'
+        ELSE '15+ days'
+      END
+    ORDER BY
+      CASE 
+        WHEN days_bucket = '0-3 days' THEN 1
+        WHEN days_bucket = '4-7 days' THEN 2
+        WHEN days_bucket = '8-15 days' THEN 3
+        WHEN days_bucket = '15+ days' THEN 4
+      END
+  `;
+
+  const result = await executeQuery(finalSql, binds);
 
   const totalPending = result.rows.reduce(
     (sum, row) => sum + Number(row.PENDING_COUNT || 0),
@@ -370,44 +416,80 @@ async function repoApplicationStatusSummary(
 }
 
 // Detailed Application Status Summary
+// Detailed application status - count by status
 async function repoDetailedApplicationStatus(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
   fromDate,
-  toDate,
-  serviceName,
-  wardName,
-  officerName,
-  status
+  toDate
 ) {
   const sql = `
-    SELECT
-      SUM(approved_applications) AS approved_applications,
-      SUM(pending_applications) AS pending_applications,
-      SUM(reject_applications) AS reject_applications
-    FROM vw_statuswise_application
+    SELECT 
+      NVL(SUM(CASE WHEN var_application_status IN ('NW','AP','DL') THEN 1 END), 0) AS approved_applications,
+      NVL(SUM(CASE WHEN var_application_status IN ('CP','IP','VP','PP','PS', 'PV') THEN 1 END), 0) AS pending_applications,
+      NVL(SUM(CASE WHEN var_application_status IN ('CR','DN') THEN 1 END), 0) AS reject_applications
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR servnm = :serviceName)
-      AND (:wardName IS NULL OR prabhag_nm = :wardName)
-      AND (:officerName IS NULL OR officer_name = :officerName)
-      AND (:status IS NULL OR status = :status)
   `;
 
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
+  let whereClauses = ``;
+  const binds = {};
 
-  const result = await executeQuery(sql, binds);
+  if (ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND u.var_user_username = :username`;
+    binds.username = username;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND w.wardid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    binds.toDate = toDate;
+  }
+
+  const finalSql = sql + whereClauses;
+  const result = await executeQuery(finalSql, binds);
 
   return result.rows?.[0] || {
-    APPROVED_APPLICATIONS: 0,
-    PENDING_APPLICATIONS: 0,
-    REJECT_APPLICATIONS: 0,
+    approved_applications: 0,
+    pending_applications: 0,
+    reject_applications: 0,
   };
 }
 

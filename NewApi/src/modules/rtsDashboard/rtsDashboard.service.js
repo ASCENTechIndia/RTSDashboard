@@ -24,7 +24,8 @@ async function serviceCounts(ulbId, filters = {}) {
 }
 
 async function serviceDeptWiseApplications( filters = {}) {
-  return repoDeptWiseApplications( filters.fromDate,
+  return repoDeptWiseApplications( 
+    filters.ulbId,filters.fromDate,
     filters.toDate,
     filters.serviceName,
     filters.wardName,
@@ -33,7 +34,9 @@ async function serviceDeptWiseApplications( filters = {}) {
 }
 
 async function serviceTatWisePending( filters = {}) {
-  return repoTatWisePending( filters.fromDate,
+  return repoTatWisePending( 
+    filters.ulbId,
+    filters.fromDate,
     filters.toDate,
     filters.serviceName,
     filters.wardName,
@@ -64,12 +67,12 @@ async function serviceApplicationStatusSummary(filters = {}) {
 
 async function serviceDetailedApplicationStatus(filters = {}) {
   return repoDetailedApplicationStatus(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
     filters.fromDate,
-    filters.toDate,
-    filters.serviceName,
-    filters.wardName,
-    filters.officerName,
-    filters.status
+    filters.toDate
   );
 }
 

@@ -1,5 +1,7 @@
 const {
   repoGetTopCounts,
+  repoGetApprovedCounts,
+  repoGetPendingCounts,
 } = require('./topcounts.repository');
 
 async function serviceGetTopCounts(filters = {}) {
@@ -14,6 +16,30 @@ async function serviceGetTopCounts(filters = {}) {
   );
 }
 
+async function serviceGetApprovedCounts(filters = {}) {
+  return repoGetApprovedCounts(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
+    filters.fromDate,
+    filters.toDate
+  );
+}
+
+async function serviceGetPendingCounts(filters = {}) {
+  return repoGetPendingCounts(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
+    filters.fromDate,
+    filters.toDate
+  );
+}
+
 module.exports = {
   serviceGetTopCounts,
+  serviceGetApprovedCounts,
+  serviceGetPendingCounts,
 };

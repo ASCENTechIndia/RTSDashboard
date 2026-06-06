@@ -810,43 +810,88 @@ async function repoPrabhagwiseApplications(
 }
 
 async function repoCommissionerSummary(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
   fromDate,
-  toDate,
-  serviceName,
-  wardName,
-  officerName,
-  status
+  toDate
 ) {
   const sql = `
     SELECT
-      officer_name,
-      servnm,
-      prabhag_nm,
-      app_date,
-      status,
-      total_applications,
-      approved_applications,
-      pending_applications,
-      applications_greater15,
-      approved_percentage
-    FROM vw_commissioner_summary
+      sd.var_service_eng_name AS servnm,
+      COUNT(a.var_application_appno) AS total_applications,
+      SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications,
+      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END) AS pending_applications,
+      SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV')
+                 AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > 15
+                 AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) > NVL(sd.num_service_maxdays, 0)
+                THEN 1 ELSE 0 END) AS applications_greater15,
+      NVL(ROUND(
+        100 * SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL')
+                         AND TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= NVL(sd.num_service_maxdays, 0)
+                        THEN 1 ELSE 0 END) /
+        NULLIF(COUNT(CASE WHEN TRUNC(SYSDATE) - TRUNC(a.dat_application_insdate) <= NVL(sd.num_service_maxdays, 0) THEN 1 END), 0),
+        2
+      ), 0) AS approved_percentage
+    FROM aorts_application_det a
+    INNER JOIN aorts_applicant_infodet infodet
+      ON infodet.var_appl_appno = a.var_application_appno
+      AND infodet.num_appl_serviceid = a.num_application_serviceid
+      AND infodet.num_appl_ulbid = a.num_application_ulbid
+    INNER JOIN aorts_service_def sd
+      ON sd.num_service_serviceid = a.num_application_serviceid
+    LEFT JOIN aorts_service_config sc
+      ON sc.num_serv_servid = sd.num_service_serviceid
+      AND sc.num_serv_deptid = sd.num_service_deptid
+      AND sc.num_serv_ulbid = a.num_application_ulbid
+    INNER JOIN admins.aoms_dept_mas d
+      ON d.num_dept_id = a.num_application_deptid
+    INNER JOIN admins.aoma_user_def u
+      ON d.num_dept_id = u.num_user_deptid
+    INNER JOIN prop.vw_ward_mas w
+      ON w.wardid = a.num_application_zoneid
     WHERE 1 = 1
-      AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
-      AND (:toDate IS NULL OR app_date <= TO_DATE(:toDate,'DD-MON-YYYY'))
-      AND (:serviceName IS NULL OR servnm = :serviceName)
-      AND (:wardName IS NULL OR prabhag_nm = :wardName)
-      AND (:officerName IS NULL OR officer_name = :officerName)
-      AND (:status IS NULL OR status = :status)
   `;
-  const binds = {
-    fromDate: fromDate || null,
-    toDate: toDate || null,
-    serviceName: serviceName || null,
-    wardName: wardName || null,
-    officerName: officerName || null,
-    status: status || null,
-  };
-  const result = await executeQuery(sql, binds);
+
+  let whereClauses = ``;
+  const binds = {};
+
+  if (ulbId != null) {
+    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND u.var_user_username = :username`;
+    binds.username = username;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND w.wardid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    binds.toDate = toDate;
+  }
+
+  const finalSql = sql + whereClauses + `
+    GROUP BY sd.var_service_eng_name
+  `;
+
+  const result = await executeQuery(finalSql, binds);
   return result.rows || [];
 }
 
@@ -927,80 +972,113 @@ async function repoOfficerWork(
   fromDate,
   toDate
 ) {
-  const sql = `
+  let sql = `
     SELECT *
     FROM (
       SELECT
-        u.var_user_username AS officer_name,
-        COUNT(a.var_application_appno) AS total_applications,
-        SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) AS approved_applications,
-        SUM(CASE WHEN a.var_application_status IN ('CP','IP','VP','PP','PS','PV') THEN 1 ELSE 0 END) AS pending_applications,
-        NVL(ROUND(
-          100 * SUM(CASE WHEN a.var_application_status IN ('NW','AP','DL') THEN 1 ELSE 0 END) /
-          NULLIF(COUNT(a.var_application_appno), 0),
-          2
-        ), 0) AS approved_percentage,
-        ROW_NUMBER() OVER (ORDER BY COUNT(a.var_application_appno) DESC) AS rank
-      FROM aorts_application_det a
-      INNER JOIN aorts_applicant_infodet infodet
-        ON infodet.var_appl_appno = a.var_application_appno
-        AND infodet.num_appl_serviceid = a.num_application_serviceid
-        AND infodet.num_appl_ulbid = a.num_application_ulbid
+        a.officer_name,
+        COUNT(a.appno) AS total_applications,
+
+        SUM(
+          CASE
+            WHEN a.status IN ('approved','Reject')
+            THEN 1
+            ELSE 0
+          END
+        ) AS approved_applications,
+
+        SUM(
+          CASE
+            WHEN a.status = 'Pending'
+            THEN 1
+            ELSE 0
+          END
+        ) AS pending_applications,
+
+        NVL(
+          ROUND(
+            100 *
+            SUM(
+              CASE
+                WHEN a.status = 'approved'
+                THEN 1
+                ELSE 0
+              END
+            )
+            / NULLIF(COUNT(a.appno), 0),
+            2
+          ),
+          0
+        ) AS approved_percentage,
+
+        ROW_NUMBER() OVER (
+          ORDER BY COUNT(a.appno) DESC
+        ) AS rank,
+
+        SUM(
+          CASE
+            WHEN TRUNC(SYSDATE) - TRUNC(a.app_date) >
+                 NVL(sd.num_service_maxdays, 0)
+             AND a.status = 'Pending'
+            THEN 1
+            ELSE 0
+          END
+        ) AS delayed_app
+
+      FROM vw_prbhagwise_applilist a
       INNER JOIN aorts_service_def sd
-        ON sd.num_service_serviceid = a.num_application_serviceid
-      LEFT JOIN aorts_service_config sc
-        ON sc.num_serv_servid = sd.num_service_serviceid
-        AND sc.num_serv_deptid = sd.num_service_deptid
-        AND sc.num_serv_ulbid = a.num_application_ulbid
-      INNER JOIN admins.aoms_dept_mas d
-        ON d.num_dept_id = a.num_application_deptid
-      INNER JOIN admins.aoma_user_def u
-        ON d.num_dept_id = u.num_user_deptid
-      INNER JOIN prop.vw_ward_mas w
-        ON w.wardid = a.num_application_zoneid
+        ON sd.num_service_serviceid = a.serviceid
+
       WHERE 1 = 1
   `;
 
-  let whereClauses = ``;
   const binds = {};
 
   if (ulbId != null) {
-    whereClauses += ` AND a.num_application_ulbid = :ulbId`;
+    sql += ` AND a.ulbid = :ulbId`;
     binds.ulbId = ulbId;
   }
 
   if (username) {
-    whereClauses += ` AND u.var_user_username = :username`;
+    sql += ` AND a.officer_name = :username`;
     binds.username = username;
   }
 
   if (serviceId != null) {
-    whereClauses += ` AND sd.num_service_serviceid = :serviceId`;
+    sql += ` AND a.serviceid = :serviceId`;
     binds.serviceId = serviceId;
   }
 
   if (wardId != null) {
-    whereClauses += ` AND w.wardid = :wardId`;
+    sql += ` AND a.wardid = :wardId`;
     binds.wardId = wardId;
   }
 
   if (fromDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
+    sql += `
+      AND TRUNC(a.app_date) >=
+          TO_DATE(:fromDate, 'DD-MON-YYYY')
+    `;
     binds.fromDate = fromDate;
   }
 
   if (toDate) {
-    whereClauses += ` AND TRUNC(a.dat_application_insdate) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
+    sql += `
+      AND TRUNC(a.app_date) <=
+          TO_DATE(:toDate, 'DD-MON-YYYY')
+    `;
     binds.toDate = toDate;
   }
 
-  const finalSql = sql + whereClauses + `
-      GROUP BY u.var_user_username
+  sql += `
+      GROUP BY a.officer_name
     )
     WHERE rank <= 10
+    ORDER BY rank
   `;
 
-  const result = await executeQuery(finalSql, binds);
+  const result = await executeQuery(sql, binds);
+
   return result.rows || [];
 }
 

@@ -18,7 +18,7 @@ export default function Navbar() {
 
   const year = today.getFullYear();
   const month = today.getMonth() + 1; // 0 = Jan
-  const day = today.getDay();
+  const day = today.getDate();
 
   const monthsName = [
     "",

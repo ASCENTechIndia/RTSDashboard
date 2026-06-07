@@ -20,7 +20,7 @@ const OfficesTable = ({ filters }) => {
         if (filters.type) params.append("serviceId", filters.type);
         if (filters.officer) params.append("username", filters.officer);
         if (filters.department) params.append("wardId", filters.department);
-
+          if (filters.status) params.append("status", filters.status);
         const queryString = params.toString();
         const endpoint = `/rts-dashboard/getOfficerWork${queryString ? `?${queryString}` : ""}`;
 

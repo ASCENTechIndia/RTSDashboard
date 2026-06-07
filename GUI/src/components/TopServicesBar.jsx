@@ -26,6 +26,7 @@ export default function TopServicesBar({ filters }) {
       if (filters.officer) params.append("username", filters.officer);
       if (filters.type) params.append("serviceId", filters.type);
       if(filters.department) params.append("wardId", filters.department)
+      if (filters.status) params.append("status", filters.status);
 
       const queryString = params.toString();
       const endpoint = `/rts-dashboard/topServices${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;

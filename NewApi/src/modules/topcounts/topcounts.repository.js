@@ -42,7 +42,7 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   }
 
   if (wardId != null) {
-    sql += ` AND wardid = :wardId`;
+    sql += ` AND deptid = :wardId`;
     binds.wardId = wardId;
   }
 
@@ -119,7 +119,7 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   }
 
   if (wardId != null) {
-    sql += ` AND wardid = :wardId`;
+    sql += ` AND deptid = :wardId`;
     binds.wardId = wardId;
   }
 
@@ -190,7 +190,7 @@ async function repoGetPendingCounts(
   }
 
   if (wardId != null) {
-    sql += ` AND w.wardid = :wardId`;
+    sql += ` AND a.num_application_deptid = :wardId`;
     binds.wardId = wardId;
   }
 
@@ -262,7 +262,7 @@ async function repoGetDelayedCounts(
   }
 
   if (wardId != null) {
-    sql += ` AND w.wardid = :wardId`;
+    sql += ` AND a.num_application_deptid = :wardId`;
     binds.wardId = wardId;
   }
 
@@ -323,13 +323,13 @@ WHERE trunc(app_date)= TRUNC(sysdate)
   }
 
   if (wardId != null) {
-    sql += ` AND wardid = :wardId`;
+    sql += ` AND deptid = :wardId`;
     binds.wardId = wardId;
   }
 
   const result = await executeQuery(sql, binds);
   return {
-    todays_applications: result.rows?.[0]?.TODAYS_APPLICATIONS || 0,
+    todays_applications: result.rows?.[0]?.TOTAL_APPLICATIONS || 0,
     approved_applications: result.rows?.[0]?.APPROVED_APPLICATIONS || 0,    
   };
 }
@@ -376,7 +376,7 @@ where  a.var_application_status in ('NW','AP','DL')
   }
 
   if (wardId != null) {
-    sql += ` AND w.wardid = :wardId`;
+    sql += ` AND a.num_application_deptid = :wardId`;
     binds.wardId = wardId;
   }
 

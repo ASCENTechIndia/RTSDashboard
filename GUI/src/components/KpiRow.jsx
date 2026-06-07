@@ -34,38 +34,37 @@ export default function KpiRow({ filters }) {
   const [todayDisposedValue, setTodayDisposedValue] = useState("");
   const [rtsValue, setRtsValue] = useState("");
 
-  const buildQueryString = () => {
-    const params = new URLSearchParams();
-    if (ULBID) params.append("ulbId", ULBID);
-    if (filters.fromDate) params.append("fromDate", filters.fromDate);
-    if (filters.toDate) params.append("toDate", filters.toDate);
-    if (filters.ward) params.append("wardName", filters.ward);
-    if (filters.status) params.append("status", filters.status);
-    if (filters.type) params.append("serviceId", filters.type);
-    if (filters.officer) params.append("username", filters.officer);
-    if (filters.department) params.append("wardId", filters.department);
-    const queryString = params.toString();
-    return queryString ? `?${queryString}` : "";
+  const buildParams = () => {
+    const params = {};
+    if (ULBID) params.ulbId = ULBID;
+    if (filters.fromDate) params.fromDate = filters.fromDate;
+    if (filters.toDate) params.toDate = filters.toDate;
+    if (filters.ward) params.wardName = filters.ward;
+    if (filters.status) params.status = filters.status;
+    if (filters.type) params.serviceId = filters.type;
+    if (filters.officer) params.username = filters.officer;
+    if (filters.department) params.wardId = filters.department;
+    return params;
   };
 
   const fetchCardsData = async () => {
     setLoader(true);
     try {
-      const query = buildQueryString();
+      const params = buildParams();
 
       const endpoints = [
-        // `/topcounts/totalApplications${query}`,
-        // `/topcounts/approvedApplications${query}`,
-        // `/topcounts/pendingApplications${query}`,
-        // `/topcounts/delayedApplications${query}`,
-        `/rts-dashboard/getCommissionerSummary${query ? `${query.replaceAll("+", " ")}` : ""}`, // this api will used for first four card
-        `/rts-dashboard/applicationStatusSummary${query ? `${query.replaceAll("+", " ")}` : ""}`,
-        `/topcounts/todaysApplications${query ? `${query.replaceAll("+", " ")}` : ""}`,
-        // `/topcounts/todaysApproved${query ? `${query.replaceAll("+", " ")}` : ""}`,
-        `/rts-dashboard/getRTSComplaints${query ? `${query.replaceAll("+", " ")}` : ""}`,
+        // `/topcounts/totalApplications`,
+        // `/topcounts/approvedApplications`,
+        // `/topcounts/pendingApplications`,
+        // `/topcounts/delayedApplications`,
+        `/rts-dashboard/getCommissionerSummary`, // this api will used for first four card + approved percentage
+        `/rts-dashboard/applicationStatusSummary`,
+        `/topcounts/todaysApplications`,
+        // `/topcounts/todaysApproved`,
+        `/rts-dashboard/getRTSComplaints`,
       ];
 
-      const requests = endpoints.map((url) => apiClient.get(url));
+      const requests = endpoints.map((url) => apiClient.get(url, { params }));
       const results = await Promise.allSettled(requests);
       // if (results[0]?.status === "fulfilled" && results[0].value?.success) {
       //   const val = results[0].value.data?.total_applications ?? 0;
@@ -122,22 +121,22 @@ export default function KpiRow({ filters }) {
         setDelayedValue(0);
       }
 
-      if (results[1]?.status === "fulfilled" && results[1].value?.success) {
-        const val = results[1].value.data?.approved_percentage ?? 0;
-        setOntimeValue(`${Number(val).toFixed(2)}%`);
+      if (results[0]?.status === "fulfilled" && results[0].value?.success) {
+        const val = results[0].value.data?.[0].APPROVED_PERCENTAGE ?? 0;
+        setOntimeValue(`${val}%`);
       } else {
         setOntimeValue("0%");
       }
 
       if (results[2]?.status === "fulfilled" && results[2].value?.success) {
-        const val = results[2].value.data?.approved_applications ?? 0;
+        const val = results[2].value.data?.todays_applications ?? 0;
         setTodayReceivedValue(val.toLocaleString("en-IN"));
       } else {
         setTodayReceivedValue("0");
       }
 
       if (results[2]?.status === "fulfilled" && results[2].value?.success) {
-        const val = results[2].value.data?.todays_applications ?? 0;
+        const val = results[2].value.data?.approved_applications ?? 0;
         setTodayDisposedValue(val.toLocaleString("en-IN"));
       } else {
         setTodayDisposedValue("0");

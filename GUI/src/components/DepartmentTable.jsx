@@ -46,7 +46,7 @@ export default function DepartmentTable({ filters }) {
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
       if (filters.toDate) params.append("toDate", filters.toDate);
       if (filters.department) params.append("wardId", filters.department);
-
+      if (filters.status) params.append("status", filters.status);
       const queryString = params.toString();
       const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 

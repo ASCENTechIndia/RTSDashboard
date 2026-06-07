@@ -25,7 +25,8 @@ export default function MonthlyTrendChart({ filters }) {
       if (filters?.officer) params.append("username", filters.officer);
       if (filters?.type) params.append("serviceId", filters.type);
       if (filters?.department) params.append("wardId", filters.department);
-
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+        if (filters.toDate) params.append("toDate", filters.toDate);
       const queryString = params.toString();
       const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
       const response = await apiClient.get(monthTrendUrl);
@@ -36,8 +37,8 @@ export default function MonthlyTrendChart({ filters }) {
       ) {
         const updatedChartData = response.data.map((item) => ({
           month: item?.MONTHS,
-          received: item?.APPROVED_APPLICATIONS || 0,
-          disposed: item?.RECEIVED_APPLICATIONS || 0,
+          received: item?.RECEIVED_APPLICATIONS || 0,
+          disposed: item?.APPROVED_APPLICATIONS || 0,
         }));
         setMonthlyTrendChartData(updatedChartData);
       } else {
@@ -86,7 +87,7 @@ export default function MonthlyTrendChart({ filters }) {
       >
         मासिक अर्ज ट्रेंड
       </h3>
-      <div style={{ height: 250 }}>
+      <div style={{ height: 200 }}>
         {" "}
         <ResponsiveContainer width="100%" height="100%">
           <LineChart

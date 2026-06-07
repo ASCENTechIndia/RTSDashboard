@@ -19,23 +19,23 @@ export default function CommissionerSummary({ filters }) {
         if (filters.type) params.append("serviceId", filters.type);
         if (filters.officer) params.append("username", filters.officer);
         if (filters.department) params.append("wardId", filters.department);
-
+        if (filters.status) params.append("status", filters.status);
         const queryString = params.toString();
         const endpoint = `/rts-dashboard/getCommissionerSummary${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
         const response = await apiClient.get(endpoint);
         if (response.success && response.data?.length > 0) {
           const data = response.data[0];
           const items = [
-            { label: "एकूण प्राप्त अर्ज", value: data.TOTAL_APPLICATIONS },
-            { label: "निकाली अर्ज", value: data.APPROVED_APPLICATIONS },
-            { label: "प्रलंबित अर्ज", value: data.PENDING_APPLICATIONS },
+            { label: "एकूण प्राप्त अर्ज", value: data.TOTAL_APPLICATIONS ?? 0 },
+            { label: "निकाली अर्ज", value: data.APPROVED_APPLICATIONS ?? 0 },
+            { label: "प्रलंबित अर्ज", value: data.PENDING_APPLICATIONS ?? 0 },
             {
               label: "विलंबित प्रकरणे (15+ दिवस)",
-              value: data.APPLICATIONS_GREATER15,
+              value: data.APPLICATIONS_GREATER15 ?? 0 ,
             },
             {
               label: "वेळेत निकाली (%)",
-              value: `${data.APPROVED_PERCENTAGE}%`,
+              value: `${data.APPROVED_PERCENTAGE ?? 0}%`,
             },
           ];
           setSummaryItems(items);

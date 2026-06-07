@@ -9,7 +9,7 @@ const colorMap = {
   success: { bg: "#dcfce7", color: "#16a34a" },
 };
 
-export default function AlertsPanel() {
+export default function AlertsPanel({ filters }) {
   const [loading, setLoading] = useState(true);
   const ULBID = import.meta.env.VITE_ULBID
   const [error, setError] = useState(null);
@@ -22,7 +22,18 @@ export default function AlertsPanel() {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const response = await apiClient.get(`/rts-dashboard/getAlerts?ulbId=${ULBID}`);
+        const params = {
+          ulbId: ULBID,
+        };
+        if (filters.fromDate) params.fromDate = filters.fromDate;
+        if (filters.toDate) params.toDate = filters.toDate;
+        if (filters.ward) params.wardName = filters.ward;
+        if (filters.status) params.status = filters.status;
+        if (filters.type) params.serviceId = filters.type;
+        if (filters.officer) params.username = filters.officer;
+        if (filters.department) params.wardId = filters.department;
+
+        const response = await apiClient.get('/rts-dashboard/getAlerts', { params });
         console.log("res ", response)
         if (response.success && response.data) {
           const pendingBuckets = response.data.pendingBuckets || [];
@@ -51,7 +62,7 @@ export default function AlertsPanel() {
     };
 
     fetchAlerts();
-  }, []);
+  }, [filters, ULBID]);
 
   if (loading) return <div className="card">Loading alerts...</div>;
   if (error) return <div className="card">Error: {error}</div>;

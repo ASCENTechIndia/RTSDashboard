@@ -16,7 +16,7 @@ export default function OnTimeGauge({ filters }) {
       const params = new URLSearchParams();
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
       if (filters.toDate) params.append("toDate", filters.toDate);
-      if (filters.ward) params.append("wardName", filters.ward);
+      if (filters.department) params.append("wardName", filters.department);
       if (filters.status) params.append("status", filters.status);
       if (filters.type) params.append("serviceName", filters.type);
       if (filters.officer) params.append("officerName", filters.officer);
@@ -122,7 +122,7 @@ export default function OnTimeGauge({ filters }) {
       </div>
 
       {/* Pie chart + legend */}
-      <div className="card">
+      <div className="card" style={{height:"100%"}}>
         <h3 className="card-title">वेळेत vs विलंबित</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <PieChart width={80} height={80}>

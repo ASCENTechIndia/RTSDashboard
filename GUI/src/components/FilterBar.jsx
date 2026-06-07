@@ -61,6 +61,12 @@ export default function FilterBar({ filters, onFilterChange }) {
     const fetchDropdowns = async () => {
       try {
         setLoader(true);
+        // Clear dropdowns while fetching
+        setWardOptions([]);
+        setTypeOptions([]);
+        setOfficerOptions([]);
+        setStatusOptions([]);
+
         const endpoints = [
           {
             name: "ward",
@@ -68,7 +74,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           },
           {
             name: "type",
-            request: apiClient.get(`/dropdowns/services?ulbId=${ULBID}`),
+            request: apiClient.get(`/dropdowns/services?ulbId=${ULBID}&deptId=${filters.department}`),
           },
           {
             name: "officer",
@@ -146,7 +152,7 @@ export default function FilterBar({ filters, onFilterChange }) {
     };
 
     fetchDropdowns();
-  }, []);
+  }, [filters]);
 
   const handleDateChange = (e) => {
     const { name, value } = e.target;

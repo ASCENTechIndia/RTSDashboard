@@ -75,7 +75,7 @@ export default function App() {
             <DepartmentTable filters={filters} /> 
             <TatDonut filters={filters}/>
             <OnTimeGauge filters={filters} /> 
-            <AlertsPanel />
+            <AlertsPanel filters={filters}/>
           </div>
 
           <div className="grid-4">

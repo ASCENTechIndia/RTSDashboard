@@ -626,7 +626,7 @@ body {
 .summary-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 15px;
 }
 .summary-item {
   display: flex;
@@ -839,6 +839,7 @@ body {
 .alerts-list {
   display: flex;
   flex-direction: column;
+  gap:15px;
 }
 
 .alert-row {

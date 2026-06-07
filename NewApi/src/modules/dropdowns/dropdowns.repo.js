@@ -1,16 +1,15 @@
 const { executeQuery } = require('../../db/queryExecutor');
 
 // Get services by ULB
-async function repoGetServices(ulbId = 1670) {
+async function repoGetServices(ulbId = 1670,deptId) {
   const sql = `
-    SELECT num_service_serviceid,case when var_serv_dispname is null then var_service_mar_name else var_serv_dispname end as var_service_eng_name 
-    FROM aorts_service_def sd
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-    WHERE sc.num_serv_ulbid = :ulbId
+    select num_service_serviceid,
+case when var_serv_dispname is null then var_service_mar_name else var_serv_dispname end as var_service_eng_name
+from  aorts_service_def 
+inner join aorts_service_config on  num_serv_servid=num_service_serviceid
+where var_service_active='Y' and num_serv_ulbid= :ulbId and num_service_deptid= :deptId 
   `;
-  return executeQuery(sql, { ulbId });
+  return executeQuery(sql, { ulbId, deptId});
 }
 
 
@@ -19,10 +18,10 @@ async function repoGetServices(ulbId = 1670) {
 
 // Get wards by ULB
 async function repoGetWards(ulbId = 1670) {
-  const sql = `
-   select num_ward_id as wardid,var_ward_name as wardname from prop.aoms_ward_mas where num_ward_ulbid=:ulbId and var_ward_activeflag='Y'
-order by num_ward_orderby
-  `;
+  const sql = `select distinct deptid as wardid,dept_marname as wardname from prop.vw_deptconfig
+inner join aorts_service_def on num_service_deptid=deptid and var_service_active='Y'
+inner join aorts_service_config on num_serv_ulbid=ulbid and num_serv_servid=num_service_serviceid
+where ulbid=:ulbId`;
   return executeQuery(sql, { ulbId });
 }
 

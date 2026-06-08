@@ -74,7 +74,7 @@ const WardsTable = ({ filters }) => {
     <div className="card">
       <h3 className="card-title">
         प्रभागनिहाय कामगिरी
-        <span className="view">View All Prabhag ›</span>
+        {/* <span className="view">View All Prabhag ›</span> */}
       </h3>
       <DataTable
         headers={headers}

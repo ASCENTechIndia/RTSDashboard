@@ -240,12 +240,12 @@ export default function KpiRow({ filters }) {
                 </span>
               </div>
             </div>
-            <span
+            {/* <span
               className="view-link"
               style={{ textAlign: "center", fontSize: "10px", color: k.color }}
             >
               View Details ›
-            </span>
+            </span> */}
           </div>
         );
       })}

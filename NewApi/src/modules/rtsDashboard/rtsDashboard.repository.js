@@ -173,17 +173,29 @@ async function repoTatWisePending(
   status
 ) {
  const sql = `
-   SELECT 
-      CASE 
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
+   SELECT
+    CASE
+        WHEN diff BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN diff BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN diff BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
-      END AS days_bucket,
-      COUNT(appno) AS pending_applications
-    FROM vw_prbhagwise_applilist
-    inner join aorts_service_def on serviceid = num_service_serviceid
-    WHERE 1 = 1 
+    END AS days_bucket,
+    COUNT(*) pending_applications
+FROM
+(
+    SELECT
+        CASE
+        WHEN NVL(TRUNC(recieptdate),SYSDATE)
+             - TRUNC(app_date + NVL(num_service_maxdays,0)) < 0
+        THEN 0
+        ELSE NVL(TRUNC(recieptdate),SYSDATE)
+             - TRUNC(app_date + NVL(num_service_maxdays,0))
+    END AS diff,
+        appno
+    FROM vw_prbhagwise_applilist a
+    INNER JOIN aorts_service_def sd
+        ON a.serviceid = sd.num_service_serviceid
+    WHERE 1=1 and upper(status)='PENDING'
  
   `;
 
@@ -218,27 +230,22 @@ async function repoTatWisePending(
     binds.officerName = officerName;
   }
 
-  if (status) {
-    whereClauses += ` AND UPPER(status) = UPPER(:status)`;
-    binds.status = status;
-  }
+  // if (status) {
+  //   whereClauses += ` AND UPPER(status) = UPPER(:status)`;
+  //   binds.status = status;
+  // }
 
   const finalSql = sql + whereClauses + `
-  GROUP BY 
-      CASE 
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 0 AND 3 THEN '0-3 days'
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 4 AND 7 THEN '4-7 days'
-        WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date+NVL(num_service_maxdays, 0)) BETWEEN 8 AND 15 THEN '8-15 days'
+  )
+WHERE diff >= 0
+GROUP BY
+    CASE
+        WHEN diff BETWEEN 0 AND 3 THEN '0-3 days'
+        WHEN diff BETWEEN 4 AND 7 THEN '4-7 days'
+        WHEN diff BETWEEN 8 AND 15 THEN '8-15 days'
         ELSE '15+ days'
-      END
-    ORDER BY
-      CASE 
-        WHEN days_bucket = '0-3 days' THEN 1
-        WHEN days_bucket = '4-7 days' THEN 2
-        WHEN days_bucket = '8-15 days' THEN 3
-        WHEN days_bucket = '15+ days' THEN 4
-      END
-  `;
+    END
+`;
 
   const result = await executeQuery(finalSql, binds);
 
@@ -271,7 +278,7 @@ async function repoMonthwiseApplicationTrend(
     SELECT 
       TO_CHAR(m.month_start, 'Mon-YYYY') AS months,
       NVL(COUNT(appno), 0) AS received_applications,
-      NVL(SUM(CASE WHEN status IN ('approved') THEN 1 ELSE 0 END), 0) 
+      NVL(SUM(CASE WHEN status IN ('approved','Reject') THEN 1 ELSE 0 END), 0) 
       AS approved_applications
     FROM months m
     LEFT JOIN vw_prbhagwise_applilist
@@ -828,20 +835,25 @@ async function repoAlerts(
 ) {
   const baseSql = `
     SELECT *
+FROM
+(
+    WITH bucket_data AS
+(
+    SELECT
+        CASE
+            WHEN overdue_days BETWEEN 4 AND 15 THEN '4-15 days'
+            WHEN overdue_days > 15 THEN '15+ days'
+        END AS days_bucket,
+        COUNT(*) applications_count
     FROM
     (
         SELECT
-            CASE
-                WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date + NVL(num_service_maxdays,0))
-                     BETWEEN 4 AND 15
-                THEN '4-15 days'
-                ELSE '15+ days'
-            END AS days_bucket,
-            COUNT(appno) AS applications_count
+            NVL(TRUNC(recieptdate),SYSDATE)
+            - TRUNC(app_date + NVL(num_service_maxdays,0)) AS overdue_days
         FROM vw_prbhagwise_applilist a
         INNER JOIN aorts_service_def sd
             ON a.serviceid = sd.num_service_serviceid
-        WHERE a.status = 'Pending'
+    WHERE a.status = 'Pending'
           AND a.ulbid = :ulbId
           AND NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date + NVL(num_service_maxdays,0)) >= 4
   `;
@@ -874,35 +886,52 @@ async function repoAlerts(
     binds.toDate = toDate;
   }
 
+   // if (status) {
+  //   whereClauses += ` AND UPPER(status) = UPPER(:status)`;
+  //   binds.status = status;
+  // }
+
   const pendingSql = baseSql + whereClauses + `
-        GROUP BY
-            CASE
-                WHEN NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date + NVL(num_service_maxdays,0))
-                     BETWEEN 4 AND 15
-                THEN '4-15 days'
-                ELSE '15+ days'
-            END
-
-        UNION ALL
-
-        SELECT
-            'OnTimeDelivered' AS days_bucket,
-            COUNT(appno) AS applications_count
-        FROM vw_prbhagwise_applilist a
-        INNER JOIN aorts_service_def sd
-            ON a.serviceid = sd.num_service_serviceid
-        WHERE a.status IN ('approved','Reject')
-          AND a.ulbid = :ulbId
-  ` + whereClauses + `
-          AND NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date)
-              <= NVL(num_service_maxdays,0)
-    )
-    ORDER BY
+            )
+    WHERE overdue_days >= 4
+    GROUP BY
         CASE
-            WHEN days_bucket = '4-15 days' THEN 2
-            WHEN days_bucket = '15+ days' THEN 1
-            WHEN days_bucket = 'OnTimeDelivered' THEN 3
+            WHEN overdue_days BETWEEN 4 AND 15 THEN '4-15 days'
+            WHEN overdue_days > 15 THEN '15+ days'
         END
+)
+SELECT
+    b.days_bucket,
+    NVL(d.applications_count,0) AS applications_count
+FROM
+(
+    SELECT '15+ days' days_bucket FROM dual
+    UNION ALL
+    SELECT '4-15 days' FROM dual
+) b
+LEFT JOIN bucket_data d
+    ON b.days_bucket = d.days_bucket
+    
+    UNION ALL
+
+    SELECT
+        'OnTimeDelivered' AS days_bucket,
+        COUNT(appno) AS applications_count
+    FROM vw_prbhagwise_applilist a
+    INNER JOIN aorts_service_def sd
+        ON a.serviceid = sd.num_service_serviceid
+    WHERE a.status IN ('approved','Reject')
+  AND a.ulbid = :ulbId
+  ` + whereClauses + `
+          AND NVL(TRUNC(recieptdate),SYSDATE) - TRUNC(app_date)
+            <= NVL(num_service_maxdays,0)
+)
+ORDER BY
+    CASE
+        WHEN days_bucket = '15+ days' THEN 1
+        WHEN days_bucket = '4-15 days' THEN 2
+        WHEN days_bucket = 'OnTimeDelivered' THEN 3
+    END
   `;
 
   const result = await executeQuery(pendingSql, binds);

@@ -1,8 +1,8 @@
 const { repoGetServices, repoStatusDropdown, repoGetWards, repoGetUsers } = require('./dropdowns.repo');
 
 // Get services by ULB
-async function serviceGetServices(ulbId) {
-  return repoGetServices(ulbId);
+async function serviceGetServices(ulbId,deptId) {
+  return repoGetServices(ulbId,deptId);
 }
 
 // Get wards by ULB

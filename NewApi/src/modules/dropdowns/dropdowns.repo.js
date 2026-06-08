@@ -1,16 +1,15 @@
 const { executeQuery } = require('../../db/queryExecutor');
 
 // Get services by ULB
-async function repoGetServices(ulbId = 1670) {
+async function repoGetServices(ulbId = 1670,deptId) {
   const sql = `
-    SELECT num_service_serviceid, var_service_eng_name 
-    FROM aorts_service_def sd
-    LEFT JOIN aorts_service_config sc
-      ON sc.num_serv_servid = sd.num_service_serviceid
-      AND sc.num_serv_deptid = sd.num_service_deptid
-    WHERE sc.num_serv_ulbid = :ulbId
+    select num_service_serviceid,
+case when var_serv_dispname is null then var_service_mar_name else var_serv_dispname end as var_service_eng_name
+from  aorts_service_def 
+inner join aorts_service_config on  num_serv_servid=num_service_serviceid
+where var_service_active='Y' and num_serv_ulbid= :ulbId and num_service_deptid= :deptId 
   `;
-  return executeQuery(sql, { ulbId });
+  return executeQuery(sql, { ulbId, deptId});
 }
 
 
@@ -19,24 +18,18 @@ async function repoGetServices(ulbId = 1670) {
 
 // Get wards by ULB
 async function repoGetWards(ulbId = 1670) {
-  const sql = `
-    SELECT DISTINCT wardname, wardid
-    FROM prop.vw_ward_mas
-    INNER JOIN aorts_application_det
-      ON wardid = num_application_zoneid
-    WHERE num_application_ulbid = :ulbId
-  `;
+  const sql = `select distinct deptid as wardid,dept_marname as wardname from prop.vw_deptconfig
+inner join aorts_service_def on num_service_deptid=deptid and var_service_active='Y'
+inner join aorts_service_config on num_serv_ulbid=ulbid and num_serv_servid=num_service_serviceid
+where ulbid=:ulbId`;
   return executeQuery(sql, { ulbId });
 }
 
 // Get users by ULB
 async function repoGetUsers(ulbId = 1670) {
   const sql = `
-    SELECT DISTINCT var_user_username
-    FROM aorts_application_det a
-    INNER JOIN admins.aoms_dept_mas d ON d.num_dept_id = a.num_application_deptid
-    INNER JOIN admins.aoma_user_def u ON d.num_dept_id = u.num_user_deptid
-    WHERE u.num_user_ulbid = :ulbId
+    select var_ward_officername as var_user_username from prop.aoms_ward_mas where num_ward_ulbid=:ulbId and var_ward_activeflag='Y'
+order by num_ward_orderby 
   `;
   return executeQuery(sql, { ulbId });
 }

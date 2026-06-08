@@ -30,7 +30,8 @@ async function serviceDeptWiseApplications(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
@@ -50,7 +51,9 @@ async function serviceMonthwiseApplicationTrend(filters = {}) {
     filters.ulbId,
     filters.username,
     filters.serviceId,
-    filters.wardId
+    filters.wardId,
+    filters.fromDate,
+    filters.toDate
   );
 }
 
@@ -73,7 +76,8 @@ async function serviceDetailedApplicationStatus(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
@@ -84,7 +88,8 @@ async function serviceTopServices(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
@@ -95,7 +100,8 @@ async function serviceServicewiseTopDelay(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
@@ -106,7 +112,8 @@ async function servicePrabhagwiseApplications(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
@@ -117,20 +124,21 @@ async function serviceCommissionerSummary(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 
-async function serviceAlerts(ulbId){
-  return repoAlerts(ulbId);
+async function serviceAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status){
+  return repoAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status);
 }
 
-async function serviceComplaintStatus(){
-  return repoComplaintStatus();
+async function serviceComplaintStatus(ulbId){
+  return repoComplaintStatus(ulbId);
 }
 
-async function serviceRTSComplaints(){
-  return repoRTSComplaints();
+async function serviceRTSComplaints(ulbId){
+  return repoRTSComplaints(ulbId);
 }
 
 async function serviceOfficerWork(filters = {}){
@@ -140,7 +148,8 @@ async function serviceOfficerWork(filters = {}){
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.status
   );
 }
 

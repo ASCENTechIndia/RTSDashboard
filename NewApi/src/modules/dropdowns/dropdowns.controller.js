@@ -13,7 +13,8 @@ function requestMeta(req) {
 async function getServices(req, res, next) {
   try {
     const ulbId = req.query.ulbid || 1670;
-    const data = await serviceGetServices(ulbId);
+    const deptId = req.query.deptId || null;
+    const data = await serviceGetServices(ulbId,deptId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Services Report completed');
     auditLog({
       action: 'GET_SERVICES',

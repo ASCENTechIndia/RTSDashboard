@@ -119,7 +119,7 @@ export default function AlertsPanel({ filters }) {
                 <div className="alert-value" style={{ color }}>
                   {a.value}
                 </div>
-                <div className="alert-link">View Details</div>
+                {/* <div className="alert-link">View Details</div> */}
               </div>
             </div>
           );

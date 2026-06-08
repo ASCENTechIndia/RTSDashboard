@@ -99,7 +99,8 @@ async function repoDeptWiseApplications(
   wardId,
   fromDate,
   toDate,
-  status
+  status,
+  prabhagId
 ) {
   const sql = `
   select dept_marname var_dept_engname,
@@ -126,6 +127,11 @@ async function repoDeptWiseApplications(
   if (username) {
     whereClauses += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+  if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -170,7 +176,8 @@ async function repoTatWisePending(
   serviceName,
   wardName,
   officerName,
-  status
+  status,
+  prabhagId
 ) {
  const sql = `
    SELECT
@@ -213,6 +220,11 @@ FROM
   if (toDate) {
     whereClauses += ` AND TRUNC(app_date) <= TO_DATE(:toDate, 'DD-MON-YYYY')`;
     binds.toDate = toDate;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceName) {
@@ -267,7 +279,7 @@ async function repoMonthwiseApplicationTrend(
   serviceId,
   wardId,
   fromDate,
-  toDate
+  toDate,prabhagId
 ) {
   const sql = `
    WITH months AS (
@@ -309,6 +321,11 @@ async function repoMonthwiseApplicationTrend(
     binds.wardId = wardId;
   }
 
+  if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
+  }
+
    if (fromDate) {
     whereClauses += ` AND TRUNC(app_date) >= TO_DATE(:fromDate, 'DD-MON-YYYY')`;
     binds.fromDate = fromDate;
@@ -337,7 +354,7 @@ async function repoApplicationStatusSummary(
   serviceName,
   wardName,
   officerName,
-  status
+  status,prabhagId
 ) {
   const commonFilters = `
     AND (:fromDate IS NULL OR app_date >= TO_DATE(:fromDate,'DD-MON-YYYY'))
@@ -364,6 +381,7 @@ async function repoApplicationStatusSummary(
       AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
       AND (:serviceName IS NULL OR serviceid = :serviceName)
       AND (:wardName IS NULL OR deptid = :wardName)
+       AND (:wardid IS NULL OR wardid = :prabhagId)
       AND (:officerName IS NULL OR officer_name = :officerName)
       AND (:status IS NULL OR (
         CASE WHEN status IN ('approved') THEN 'Approved'
@@ -391,6 +409,7 @@ async function repoApplicationStatusSummary(
       AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
       AND (:serviceName IS NULL OR serviceid = :serviceName)
       AND (:wardName IS NULL OR deptid = :wardName)
+      AND (:wardid IS NULL OR wardid = :prabhagId)
       AND (:officerName IS NULL OR officer_name = :officerName)
       AND (:status IS NULL OR (
         CASE WHEN status IN ('approved') THEN 'Approved'
@@ -410,6 +429,7 @@ async function repoApplicationStatusSummary(
     wardName: wardName || null,
     officerName: officerName || null,
     status: status || null,
+    prabhagId: prabhagId || null
   };
 
   const [approvedResult, resolvedPendingResult] = await Promise.all([
@@ -440,7 +460,7 @@ async function repoDetailedApplicationStatus(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const sql = `
     SELECT 
@@ -467,6 +487,11 @@ async function repoDetailedApplicationStatus(
   if (serviceId != null) {
     whereClauses += ` AND serviceid = :serviceId`;
     binds.serviceId = serviceId;
+  }
+  
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (wardId != null) {
@@ -507,7 +532,7 @@ async function repoTopServices(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const sql = `
    SELECT 
@@ -528,6 +553,11 @@ async function repoTopServices(
   if (username) {
     whereClauses += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -574,7 +604,7 @@ async function repoServicewiseTopDelay(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const sql = `
     SELECT
@@ -606,6 +636,11 @@ async function repoServicewiseTopDelay(
   if (username) {
     whereClauses += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -650,7 +685,7 @@ async function repoPrabhagwiseApplications(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const sql = `
     SELECT *
@@ -711,6 +746,11 @@ FROM
     binds.ulbId = ulbId;
   }
 
+   if(prabhagId != null) {
+    whereClauses += ` AND a.wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
+  }
+
   if (username) {
     whereClauses += ` AND a.officer_name = :username`;
     binds.username = username;
@@ -758,7 +798,7 @@ async function repoCommissionerSummary(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const sql = `
     select COUNT(appno) AS total_applications,
@@ -792,6 +832,11 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   if (username) {
     whereClauses += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -831,7 +876,7 @@ async function repoAlerts(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   const baseSql = `
     SELECT *
@@ -869,6 +914,11 @@ FROM
   if (serviceId != null) {
     whereClauses += ` AND a.serviceid = :serviceId`;
     binds.serviceId = serviceId;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (wardId != null) {
@@ -980,7 +1030,7 @@ async function repoOfficerWork(
   wardId,
   fromDate,
   toDate,
-  status
+  status,prabhagId
 ) {
   let sql = `
     SELECT *
@@ -1057,6 +1107,11 @@ async function repoOfficerWork(
   if (serviceId != null) {
     sql += ` AND a.serviceid = :serviceId`;
     binds.serviceId = serviceId;
+  }
+
+   if(prabhagId != null) {
+    whereClauses += ` AND a.wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (wardId != null) {

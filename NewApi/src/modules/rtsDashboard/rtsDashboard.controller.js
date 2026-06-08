@@ -55,6 +55,7 @@ async function getDeptWiseApplications(req, res, next) {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       status: req.query.status || null,
+      prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
     };
     const rows = await serviceDeptWiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Department-wise Applications Report completed');
@@ -83,6 +84,8 @@ async function getTatWisePending(req, res, next) {
       wardName: req.query.wardName || null,
       officerName: req.query.officerName || null,
       status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceTatWisePending(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'TAT-wise Pending Applications Report completed');
@@ -110,6 +113,8 @@ async function getMonthwiseApplicationTrend(req, res, next) {
       wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceMonthwiseApplicationTrend(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Monthwise Application Trend Report completed');
@@ -138,6 +143,8 @@ async function getApplicationStatusSummary(req, res, next) {
       wardName: req.query.wardName || null,
       officerName: req.query.officerName || null,
       status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const data = await serviceApplicationStatusSummary(filters);
     logApiSuccess(req, 200, data, 'Application Status Summary Report completed');
@@ -166,6 +173,8 @@ async function getDetailedApplicationStatus(req, res, next) {
         fromDate: req.query.fromDate || null,
         toDate: req.query.toDate || null,
         status: req.query.status || null,
+              prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
       };
     const data = await serviceDetailedApplicationStatus(filters);
     logApiSuccess(req, 200, data, 'Detailed Application Status Report completed');
@@ -194,6 +203,8 @@ async function getTopServices(req, res, next) {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceTopServices(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Top Services Report completed');
@@ -222,6 +233,8 @@ async function getServicewiseTopDelay(req, res, next) {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       status: req.query.status || null, 
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceServicewiseTopDelay(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Service-wise Top Delay Report completed');
@@ -250,6 +263,8 @@ async function getPrabhagwiseApplications(req, res, next) {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
         status: req.query.status || null,
+              prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await servicePrabhagwiseApplications(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Prabhagwise applications completed');
@@ -278,6 +293,8 @@ async function getCommissionerSummary(req, res, next) {
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
       status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceCommissionerSummary(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Commissioner summary completed');
@@ -305,7 +322,9 @@ async function getAlerts(req, res, next) {
       const fromDate = req.query.fromDate || null;
       const toDate = req.query.toDate || null;
       const status = req.query.status || null;
-    const rows = await serviceAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status);
+     const  prabhagId= req.query.prabhagId ? parseInt(req.query.prabhagId) : null;
+
+    const rows = await serviceAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status, prabhagId);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Alerts fetched');
     auditLog({
       action: 'ALERTS',
@@ -371,7 +390,9 @@ async function getOfficerWork(req, res, next) {
       wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
       fromDate: req.query.fromDate || null,
       toDate: req.query.toDate || null,
-      status: req.query.status || null
+      status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
     };
     const rows = await serviceOfficerWork(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Officer work fetched');

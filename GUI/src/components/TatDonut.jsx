@@ -24,6 +24,7 @@ export default function TatDonut({ filters }) {
       if (filters?.status) params.append("status", filters.status);
       if (filters?.type) params.append("serviceName", filters.type);
       if (filters?.officer) params.append("officerName", filters.officer);
+      // if (filters?.ward) params.append("prabhagId", filters.ward);
 
       const queryString = params.toString();
       const tatUrl = `/rts-dashboard/tatWisePending${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;

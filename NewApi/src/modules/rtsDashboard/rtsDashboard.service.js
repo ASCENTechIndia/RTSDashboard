@@ -31,7 +31,8 @@ async function serviceDeptWiseApplications(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -43,7 +44,9 @@ async function serviceTatWisePending( filters = {}) {
     filters.serviceName,
     filters.wardName,
     filters.officerName,
-    filters.status);
+    filters.status,
+    filters.prabhagId
+  );
 }
 
 async function serviceMonthwiseApplicationTrend(filters = {}) {
@@ -53,7 +56,8 @@ async function serviceMonthwiseApplicationTrend(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.prabhagId
   );
 }
 
@@ -65,7 +69,8 @@ async function serviceApplicationStatusSummary(filters = {}) {
     filters.serviceName,
     filters.wardName,
     filters.officerName,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -77,7 +82,8 @@ async function serviceDetailedApplicationStatus(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -89,7 +95,8 @@ async function serviceTopServices(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -101,7 +108,8 @@ async function serviceServicewiseTopDelay(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -113,7 +121,8 @@ async function servicePrabhagwiseApplications(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -125,12 +134,13 @@ async function serviceCommissionerSummary(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
-async function serviceAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status){
-  return repoAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status);
+async function serviceAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status, prabhagId){
+  return repoAlerts(ulbId, username, serviceId, wardId, fromDate, toDate, status, prabhagId);
 }
 
 async function serviceComplaintStatus(ulbId){
@@ -149,7 +159,8 @@ async function serviceOfficerWork(filters = {}){
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 

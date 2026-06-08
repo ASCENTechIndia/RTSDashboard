@@ -27,6 +27,7 @@ function buildFilters(req) {
     fromDate: req.query.fromDate || null,
     toDate: req.query.toDate || null,
     status: req.query.status || null,
+    prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId, 10) : null,
   };
 }
 

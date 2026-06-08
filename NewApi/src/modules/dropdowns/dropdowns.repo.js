@@ -25,6 +25,13 @@ where ulbid=:ulbId`;
   return executeQuery(sql, { ulbId });
 }
 
+// Get wards by ULB ID with detailed information
+async function repoGetWardsByUlbId(ulbId) {
+  console.log('Fetching wards for ULB ID:', ulbId);
+  const sql = `select num_ward_id, var_ward_name from prop.aoms_ward_mas where num_ward_ulbid=:ulbId and var_ward_activeflag='Y' order by num_ward_orderby`;
+  return executeQuery(sql, { ulbId:Number(ulbId) });
+}
+
 // Get users by ULB
 async function repoGetUsers(ulbId = 1670) {
   const sql = `
@@ -45,4 +52,4 @@ from aorts_application_det where num_application_ulbid = :ulbId`;
 }
 
 
-module.exports = {repoStatusDropdown,repoGetServices,repoGetWards,repoGetUsers}
+module.exports = {repoStatusDropdown,repoGetServices,repoGetWards,repoGetWardsByUlbId,repoGetUsers}

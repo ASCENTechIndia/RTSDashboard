@@ -246,7 +246,7 @@ export default function FilterBar({ filters, onFilterChange }) {
       className="filter-bar"
       style={{
         display: "flex",
-        flexWrap: "nowrap",
+        flexWrap: "wrap",
         gap: "12px",
         alignItems: "flex-end",
       }}
@@ -260,7 +260,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={toDateInputValue(filters.fromDate)}
           onChange={handleDateChange}
           className="filter-select"
-          style={{ width: "100%" }}
         />
       </div>
 
@@ -273,7 +272,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={toDateInputValue(filters.toDate)}
           onChange={handleDateChange}
           className="filter-select"
-          style={{ width: "100%" }}
         />
       </div>
 
@@ -285,7 +283,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={filters.department}
           onChange={handleSelectChange}
           className="filter-select"
-          style={{ width: "100%" }}
         >
           <option value="">सर्व</option>
           {wardOptions.map((opt) => (
@@ -304,7 +301,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={filters.type}
           onChange={handleSelectChange}
           className="filter-select"
-          style={{ width: "100%" }}
         >
           <option value="">सर्व</option>
           {typeOptions.map((opt) => (
@@ -323,7 +319,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={filters.ward}
           onChange={handleSelectChange}
           className="filter-select"
-          style={{ width: "100%" }}
         >
           <option value="">सर्व</option>
           <option value="Ho">HO</option>
@@ -338,8 +333,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={filters.officer}
           onChange={handleSelectChange}
           className="filter-select"
-          x
-          style={{ width: "100%" }}
         >
           <option value="">सर्व</option>
           {officerOptions.map((opt) => (
@@ -358,7 +351,6 @@ export default function FilterBar({ filters, onFilterChange }) {
           value={filters.status}
           onChange={handleSelectChange}
           className="filter-select"
-          style={{ width: "100%" }}
         >
           <option value="">सर्व</option>
           {statusOptions.map((opt) => (
@@ -374,7 +366,6 @@ export default function FilterBar({ filters, onFilterChange }) {
         type="button"
         className="reset-btn"
         onClick={handleReset}
-        style={{ flex: "0 0 auto", whiteSpace: "nowrap" }}
       >
         ↻ Reset
       </button>

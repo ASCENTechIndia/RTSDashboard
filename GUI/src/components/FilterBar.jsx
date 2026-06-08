@@ -91,7 +91,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           //  {
           //   name: "prabhag",
           //   request: apiClient.get(
-          //     `/dropdowns/getPrabhagDropdown?ulbId=${ULBID}`,
+          //     `/dropdowns/prabhag?ulbid=${ULBID}`,
           //   ),
           // },
         ];

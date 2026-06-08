@@ -34,7 +34,7 @@ export default function AlertsPanel({ filters }) {
         if (filters.department) params.wardId = filters.department;
 
         const response = await apiClient.get('/rts-dashboard/getAlerts', { params });
-        console.log("res ", response)
+   
         if (response.success && response.data) {
           const pendingBuckets = response.data.pendingBuckets || [];
           const approved = response.data.approvedApplications || 0;

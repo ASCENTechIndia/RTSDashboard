@@ -154,31 +154,84 @@ export default function FilterBar({ filters, onFilterChange }) {
     fetchDropdowns();
   }, [filters]);
 
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    if (value) {
-      const [year, month, day] = value.split("-");
-      const months = [
-        "JAN",
-        "FEB",
-        "MAR",
-        "APR",
-        "MAY",
-        "JUN",
-        "JUL",
-        "AUG",
-        "SEP",
-        "OCT",
-        "NOV",
-        "DEC",
-      ];
-      const formatted = `${day}-${months[parseInt(month, 10) - 1]}-${year}`;
-      onFilterChange({ ...filters, [name]: formatted });
-    } else {
-      onFilterChange({ ...filters, [name]: "" });
-    }
-  };
+  // const handleDateChange = (e) => {
+  //   const { name, value } = e.target;
+  //   if (value) {
+  //     const [year, month, day] = value.split("-");
+  //     const months = [
+  //       "JAN",
+  //       "FEB",
+  //       "MAR",
+  //       "APR",
+  //       "MAY",
+  //       "JUN",
+  //       "JUL",
+  //       "AUG",
+  //       "SEP",
+  //       "OCT",
+  //       "NOV",
+  //       "DEC",
+  //     ];
+  //     const formatted = `${day}-${months[parseInt(month, 10) - 1]}-${year}`;
+  //     onFilterChange({ ...filters, [name]: formatted });
+  //   } else {
+  //     onFilterChange({ ...filters, [name]: "" });
+  //   }
+  // };
 
+  const handleDateChange = (e) => {
+  const { name, value } = e.target;
+
+  const currentFrom =
+    name === "fromDate"
+      ? value
+      : toDateInputValue(filters.fromDate);
+
+  const currentTo =
+    name === "toDate"
+      ? value
+      : toDateInputValue(filters.toDate);
+
+  if (
+    currentFrom &&
+    currentTo &&
+    new Date(currentFrom) > new Date(currentTo)
+  ) {
+    alert("From Date cannot be greater than To Date");
+    return;
+  }
+
+  if (value) {
+    const [year, month, day] = value.split("-");
+
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ];
+
+    const formatted = `${day}-${months[parseInt(month, 10) - 1]}-${year}`;
+
+    onFilterChange({
+      ...filters,
+      [name]: formatted,
+    });
+  } else {
+    onFilterChange({
+      ...filters,
+      [name]: "",
+    });
+  }
+};
   const handleSelectChange = (e) => {
     const { name, value } = e.target;
     onFilterChange({ ...filters, [name]: value });

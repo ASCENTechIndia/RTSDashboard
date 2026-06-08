@@ -89,7 +89,7 @@ export default function TatDonut({ filters }) {
             </div>
           </div>
         </div>
-        <div className="legend" style={{ marginLeft: "auto" }}>
+        <div className="legend" style={{ marginLeft: "auto " }}>
           {tatData.map((d, i) => (
             <div className="item" key={i}>
               <div

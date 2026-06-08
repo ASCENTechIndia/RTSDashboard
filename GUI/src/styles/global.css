@@ -1224,7 +1224,8 @@ body {
 
   .chart-with-legend {
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 2px;
+    padding: 0 2.5rem;
   }
 
   .summary-list {

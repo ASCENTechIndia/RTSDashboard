@@ -73,7 +73,7 @@ const OfficesTable = ({ filters }) => {
     <div className="card">
       <h3 className="card-title">
         अधिकारी कामगिरी
-        <span className="view">View All Officers ›</span>
+        {/* <span className="view">View All Officers ›</span> */}
       </h3>
       <DataTable
         headers={headers}

@@ -131,7 +131,7 @@ export default function DepartmentTable({ filters }) {
                 प्रलंबित
               </th>
               <th className="num" style={{ textAlign: "center" }}>
-                वेळेत निकाली (%)
+                निकाली (%)
               </th>
             </tr>
           </thead>

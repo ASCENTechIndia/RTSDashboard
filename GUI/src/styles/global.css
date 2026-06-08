@@ -1356,20 +1356,30 @@ body {
 
   .user {
     flex: 1;
-    min-width: 100px;
+    min-width: 160px;
     padding: 3px 5px;
     gap: 4px;
   }
 
-  .user-avatar {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
+  .user-meta {
+    display: flex;
+    flex-direction: column;
+    font-size: 8px;
+    min-width: 0;
   }
 
-  .user-meta {
+  .user-role {
+    font-size: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-name {
     font-size: 8px;
-    display: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .user-caret {

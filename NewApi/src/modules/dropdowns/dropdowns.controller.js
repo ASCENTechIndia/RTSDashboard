@@ -1,4 +1,4 @@
-const {serviceStatusDropdown, serviceGetServices, serviceGetWards, serviceGetUsers} = require('./dropdowns.service');
+const {serviceStatusDropdown, serviceGetServices, serviceGetWards, serviceGetUsers, serviceGetWardsByUlbId} = require('./dropdowns.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -78,6 +78,26 @@ async function getUsers(req, res, next) {
   }
 }
 
+async function getWardsByUlbId(req, res, next) {
+  try {
+    const ulbId = req.query.ulbid || 1670;
+    const data = await serviceGetWardsByUlbId(ulbId);
+    logApiSuccess(req, 200, { count: data?.length || 0 }, 'Wards By ULB ID Report completed');
+    auditLog({
+      action: 'GET_WARDS_BY_ULB_ID',
+      actor: req.user?.userId ,
+      module: 'dropdowns',
+      status: 'SUCCESS',
+      details: { ulbId },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(data);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Wards By ULB ID Report error');
+    return next(error);
+  }
+}
+
 async function getStatusDropdown(req, res, next) {
   try {
      const ulbId = req.query.ulbId || req.user?.ulbId;
@@ -98,4 +118,4 @@ async function getStatusDropdown(req, res, next) {
      }
    }
 
-module.exports = {getStatusDropdown, getServices, getWards, getUsers}
+module.exports = {getStatusDropdown, getServices, getWards, getWardsByUlbId, getUsers}

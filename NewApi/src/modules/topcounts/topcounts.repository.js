@@ -6,7 +6,7 @@ async function repoGetTopCounts(
   serviceId,
   wardId,
   fromDate,
-  toDate,status
+  toDate,status,prabhagId
 ) {
   let sql = `
     select COUNT(appno) AS total_applications,
@@ -34,6 +34,11 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   if (username) {
     sql += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+  if(prabhagId != null){
+    sql += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -83,7 +88,7 @@ async function repoGetApprovedCounts(
   serviceId,
   wardId,
   fromDate,
-  toDate
+  toDate,prabhagId
 ) {
   let sql = `
      select COUNT(appno) AS total_applications,
@@ -111,6 +116,11 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   if (username) {
     sql += ` AND officer_name = :username`;
     binds.username = username;
+  }
+
+  if(prabhagId != null){
+    sql += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (serviceId != null) {
@@ -287,7 +297,8 @@ async function repoGetTodaysApplications(
   ulbId,
   username,
   serviceId,
-  wardId
+  wardId,
+  prabhagId
 ) {
   let sql = `
     select COUNT(appno) AS total_applications,
@@ -310,6 +321,11 @@ WHERE trunc(app_date)= TRUNC(sysdate)
   if (ulbId != null) {
     sql += ` AND ulbid = :ulbId`;
     binds.ulbId = ulbId;
+  }
+
+  if (prabhagId != null) {
+    sql += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
   }
 
   if (username) {

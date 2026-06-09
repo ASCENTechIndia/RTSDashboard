@@ -15,7 +15,8 @@ async function serviceGetTopCounts(filters = {}) {
     filters.wardId,
     filters.fromDate,
     filters.toDate,
-    filters.status
+    filters.status,
+    filters.prabhagId
   );
 }
 
@@ -26,7 +27,8 @@ async function serviceGetApprovedCounts(filters = {}) {
     filters.serviceId,
     filters.wardId,
     filters.fromDate,
-    filters.toDate
+    filters.toDate,
+    filters.prabhagId,
   );
 }
 
@@ -57,7 +59,7 @@ async function serviceGetTodaysApplications(filters = {}) {
     filters.ulbId,
     filters.username,
     filters.serviceId,
-    filters.wardId
+    filters.wardId,filters.prabhagId
   );
 }
 

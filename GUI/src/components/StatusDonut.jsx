@@ -21,6 +21,7 @@ export default function StatusDonut({ filters }) {
       if (filters?.status) params.append("status", filters.status);
       if (filters?.type) params.append("serviceName", filters.type);
       if (filters?.officer) params.append("officerName", filters.officer);
+      // if (filters?.ward) params.append("prabhagId", filters.ward);
 
       const queryString = params.toString();
       const statusUrl = `/rts-dashboard/detailedApplicationStatus${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;

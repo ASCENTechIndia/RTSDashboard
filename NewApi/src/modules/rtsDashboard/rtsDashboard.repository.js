@@ -349,15 +349,36 @@ async function repoApplicationStatusSummary(
   `;
 
   const approvedSql = `
-   SELECT NVL(
-      ROUND(
-        SUM(CASE WHEN status IN ('approved') THEN 1 END) * 100.0 / COUNT(appno),
+   SELECT ROUND(
+        NVL(
+            SUM(
+                CASE
+                    WHEN status IN ('approved', 'Reject')
+                     AND NVL(TRUNC(recieptdate), SYSDATE) - TRUNC(app_date) <= num_service_maxdays
+                    THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) * 100 /
+        NULLIF(
+            NVL(
+                SUM(
+                    CASE
+                        WHEN status IN ('approved', 'Reject')
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ),
+            0
+        ),
         2
-      ),
-      0
     ) AS approved_percentage
     FROM  vw_prbhagwise_applilist
     inner join aorts_service_def on serviceid = num_service_serviceid
+
     WHERE 1 = 1
     AND ulbid = :ulbId
      AND (:fromDate IS NULL OR TRUNC(app_date) >= TO_DATE(:fromDate,'DD-MON-YYYY'))
@@ -371,17 +392,43 @@ async function repoApplicationStatusSummary(
              WHEN status IN ('Reject') THEN 'Reject'
         END
       ) = :status)
-
-      AND NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date) <= num_service_maxdays
  `;
 
-  const resolvedPendingSql = `
-  SELECT 
-     NVL(SUM(CASE WHEN status IN ('approved','Reject') THEN 1 ELSE 0 END),0)
-      AS approved_applications,
+  const resolvedPendingSql = `SELECT
+    NVL(
+        SUM(
+            CASE
+                WHEN status IN ('approved', 'Reject')
+                 AND NVL(TRUNC(recieptdate), SYSDATE) - TRUNC(app_date) <= num_service_maxdays
+                THEN 1
+                ELSE 0
+            END
+        ),
+        0
+    ) AS approved_applications,
 
-    NVL(SUM(CASE WHEN status IN ('Pending') THEN 1 ELSE 0 END),0)
-      AS pending_applications
+    NVL(
+        SUM(
+            CASE
+                WHEN status IN ('approved', 'Reject')
+                THEN 1
+                ELSE 0
+            END
+        ),
+        0
+    )
+    -
+    NVL(
+        SUM(
+            CASE
+                WHEN status IN ('approved', 'Reject')
+                 AND NVL(TRUNC(recieptdate), SYSDATE) - TRUNC(app_date) <= num_service_maxdays
+                THEN 1
+                ELSE 0
+            END
+        ),
+        0
+    ) AS pending_applications
 
     FROM  vw_prbhagwise_applilist
     inner join aorts_service_def on serviceid = num_service_serviceid
@@ -398,8 +445,6 @@ async function repoApplicationStatusSummary(
              WHEN status IN ('Reject') THEN 'Reject'
         END
       ) = :status)
-      AND NVL(TRUNC(recieptdate),sysdate) - TRUNC(app_date) <= num_service_maxdays
-
 `;
 
   const binds = {
@@ -772,10 +817,33 @@ async function repoCommissionerSummary(
        SUM(pending_applications) AS pending_applications,SUM(CASE when nvl(TRUNC(recieptdate),sysdate) - TRUNC(app_date + NVL(num_service_maxdays,0))> 15 
            AND status IN ('Pending')
         THEN 1 ELSE 0 END) AS applications_greater15,
-        nvl(ROUND(100 * SUM(CASE WHEN status IN ('approved','Reject')
-                    AND nvl(TRUNC(recieptdate),sysdate) - TRUNC(app_date)<= NVL(num_service_maxdays,0) THEN 1 ELSE 0 END)/
-        NULLIF(COUNT(CASE WHEN nvl(TRUNC(recieptdate),sysdate) - TRUNC(app_date)<= NVL(num_service_maxdays,0) THEN 1 END),
-               0),2),0) AS approved_percentage
+        ROUND(
+        NVL(
+            SUM(
+                CASE
+                    WHEN status IN ('approved', 'Reject')
+                     AND NVL(TRUNC(recieptdate), SYSDATE) - TRUNC(app_date) <= num_service_maxdays
+                    THEN 1
+                    ELSE 0
+                END
+            ),
+            0
+        ) * 100 /
+        NULLIF(
+            NVL(
+                SUM(
+                    CASE
+                        WHEN status IN ('approved', 'Reject')
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ),
+            0
+        ),
+        2
+    ) AS approved_percentage
 from vw_prbhagwise_applilist
 inner join aorts_service_def on serviceid = num_service_serviceid
     WHERE 1 = 1

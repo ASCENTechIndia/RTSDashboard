@@ -306,7 +306,7 @@ export default function FilterBar({ filters, onFilterChange }) {
     >
       {/* From Date */}
       <div className="filter-group" style={{ flex: 1, minWidth: 0 }}>
-        <label className="filter-label">From</label>
+        <label className="filter-label">पासून</label>
         <input
           type="date"
           name="fromDate"
@@ -318,7 +318,7 @@ export default function FilterBar({ filters, onFilterChange }) {
 
       {/* To Date */}
       <div className="filter-group" style={{ flex: 1, minWidth: 0 }}>
-        <label className="filter-label">To</label>
+        <label className="filter-label">पर्यंत</label>
         <input
           type="date"
           name="toDate"
@@ -398,7 +398,7 @@ export default function FilterBar({ filters, onFilterChange }) {
 
       {/* Status */}
       <div className="filter-group" style={{ flex: 1, minWidth: 0 }}>
-        <label className="filter-label">Status</label>
+        <label className="filter-label">स्थिती</label>
         <select
           name="status"
           value={filters.status}

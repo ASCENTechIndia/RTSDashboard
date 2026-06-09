@@ -72,7 +72,7 @@ const OfficesTable = ({ filters }) => {
   return (
     <div className="card">
       <h3 className="card-title">
-        अधिकारी कामगिरी
+        अधिकारी कामगिरी (टॉप 10)
         {/* <span className="view">View All Officers ›</span> */}
       </h3>
       <DataTable

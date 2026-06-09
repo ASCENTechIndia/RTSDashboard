@@ -73,8 +73,8 @@ export default function Navbar() {
         <div className="user">
           <div className="user-avatar">👤</div>
           <div className="user-meta">
-            <div className="user-role">आयुक्त / प्रशासक</div>
-            <div className="user-name">Dhule Mahanagarpalika</div>
+            <div className="user-role">आयुक्त</div>
+            {/* <div className="user-name">Dhule Mahanagarpalika</div> */}
           </div>
           <span className="user-caret">▾</span>
         </div>

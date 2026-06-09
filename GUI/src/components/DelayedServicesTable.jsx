@@ -47,19 +47,19 @@ export default function DelayedServicesTable({ filters }) {
 
   const headers = [
     { label: "सेवा प्रकार", align: "left" },
-    { label: "प्रलंबित अर्ज" },
+    { label: "विलंबित अर्ज" },
     { label: "सरासरी दिवस" },
   ];
 
   const keyMapping = {
     "सेवा प्रकार": "SERVICE_NAME",
-    "प्रलंबित अर्ज": "DELAYED_APPLICATIONS",
+    "विलंबित अर्ज": "DELAYED_APPLICATIONS",
     "सरासरी दिवस": "AVG_DELAY_DAYS",
   };
 
   return (
     <div className="card">
-      <h3 className="card-title">Top Delayed Services (15+ दिवस प्रलंबित)</h3>
+      <h3 className="card-title">Top Delayed Services (15+ दिवस विलंबित)</h3>
       <div>
         <DataTable
           headers={headers}

@@ -74,7 +74,7 @@ const WardsTable = ({ filters }) => {
   return (
     <div className="card">
       <h3 className="card-title">
-        प्रभागनिहाय कामगिरी
+        प्रभागनिहाय कामगिरी (टॉप 10)
         {/* <span className="view">View All Prabhag ›</span> */}
       </h3>
       <DataTable

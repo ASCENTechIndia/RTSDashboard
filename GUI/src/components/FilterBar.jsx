@@ -420,7 +420,7 @@ export default function FilterBar({ filters, onFilterChange }) {
 
       {/* Status */}
       <div className="filter-group" style={{ flex: 1, minWidth: 0 }}>
-        <label className="filter-label">स्थिती</label>
+        <label className="filter-label">सद्य स्थिती</label>
         <select
           name="status"
           value={filters.status}

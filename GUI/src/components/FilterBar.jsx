@@ -7,7 +7,7 @@ export default function FilterBar({ filters, onFilterChange }) {
   const [typeOptions, setTypeOptions] = useState([]);
   const [officerOptions, setOfficerOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
-  // const [prabhagOptions, setPrabhagOptions] = useState([]);
+  const [prabhagOptions, setPrabhagOptions] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const { setLoader } = useLoader();
@@ -68,7 +68,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         setTypeOptions([]);
         setOfficerOptions([]);
         setStatusOptions([]);
-        // setPrabhagOptions([]);
+        setPrabhagOptions([]);
         const endpoints = [
           {
             name: "ward",
@@ -88,12 +88,12 @@ export default function FilterBar({ filters, onFilterChange }) {
               `/dropdowns/getStatusDropdown?ulbId=${ULBID}`,
             ),
           },
-          //  {
-          //   name: "prabhag",
-          //   request: apiClient.get(
-          //     `/dropdowns/prabhag?ulbid=${ULBID}`,
-          //   ),
-          // },
+           {
+            name: "prabhag",
+            request: apiClient.get(
+              `/dropdowns/prabhag?ulbid=${ULBID}`,
+            ),
+          },
         ];
 
         const results = await Promise.allSettled(
@@ -132,27 +132,27 @@ export default function FilterBar({ filters, onFilterChange }) {
                 })),
               );
             } 
-            // else if (endpointName === "prabhag" && response.data?.rows) {
-            //   setPrabhagOptions(
-            //     response.data.rows.map((p) => ({
-            //       label: p.VAR_WARD_NAME,
-            //       value: p.NUM_WARD_ID,
-            //     })),
-            //   );
-            // } 
+            else if (endpointName === "prabhag" && response.data?.rows) {
+              setPrabhagOptions(
+                response.data.rows.map((p) => ({
+                  label: p.VAR_WARD_NAME,
+                  value: p.NUM_WARD_ID,
+                })),
+              );
+            } 
             else {
               if (endpointName === "ward") setWardOptions([]);
               if (endpointName === "type") setTypeOptions([]);
               if (endpointName === "officer") setOfficerOptions([]);
               if (endpointName === "status") setStatusOptions([]);
-              // if (endpointName === "prabhag") setPrabhagOptions([]);
+              if (endpointName === "prabhag") setPrabhagOptions([]);
             }
           } else {
             if (endpointName === "ward") setWardOptions([]);
             if (endpointName === "type") setTypeOptions([]);
             if (endpointName === "officer") setOfficerOptions([]);
             if (endpointName === "status") setStatusOptions([]);
-            // if (endpointName === "prabhag") setPrabhagOptions([]);
+            if (endpointName === "prabhag") setPrabhagOptions([]);
           }
         });
       } catch (error) {
@@ -161,7 +161,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         setTypeOptions([]);
         setOfficerOptions([]);
         setStatusOptions([]);
-        // setPrabhagOptions([]);
+        setPrabhagOptions([]);
       } finally {
         setLoading(false);
         setLoader(false);
@@ -391,12 +391,12 @@ export default function FilterBar({ filters, onFilterChange }) {
           className="filter-select"
         >
           <option value="">सर्व</option>
-          <option value="Ho">HO</option>
-          {/* {prabhagOptions.map((opt) => (
+          {/* <option value="Ho">HO</option> */}
+          {prabhagOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
-          ))} */}
+          ))} 
         </select>
       </div>
 

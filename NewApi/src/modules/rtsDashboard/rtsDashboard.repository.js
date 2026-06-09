@@ -402,7 +402,7 @@ async function repoApplicationStatusSummary(
       AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
       AND (:serviceName IS NULL OR serviceid = :serviceName)
       AND (:wardName IS NULL OR deptid = :wardName)
-       AND (:wardid IS NULL OR wardid = :prabhagId)
+       AND (:prabhagId IS NULL OR wardid = :prabhagId)
       AND (:officerName IS NULL OR officer_name = :officerName)
       AND (:status IS NULL OR (
         CASE WHEN status IN ('approved') THEN 'Approved'
@@ -456,7 +456,7 @@ async function repoApplicationStatusSummary(
       AND (:toDate IS NULL OR TRUNC(app_date) <= TO_DATE(:toDate,'DD-MON-YYYY'))
       AND (:serviceName IS NULL OR serviceid = :serviceName)
       AND (:wardName IS NULL OR deptid = :wardName)
-      AND (:wardid IS NULL OR wardid = :prabhagId)
+      AND (:prabhagId IS NULL OR wardid = :prabhagId)
       AND (:officerName IS NULL OR officer_name = :officerName)
       AND (:status IS NULL OR (
         CASE WHEN status IN ('approved') THEN 'Approved'
@@ -1178,7 +1178,7 @@ async function repoOfficerWork(
   }
 
    if(prabhagId != null) {
-    whereClauses += ` AND a.wardid = :prabhagId`;
+    sql += ` AND a.wardid = :prabhagId`;
     binds.prabhagId = prabhagId;
   }
 

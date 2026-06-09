@@ -20,7 +20,7 @@ export default function CommissionerSummary({ filters }) {
         if (filters.officer) params.append("username", filters.officer);
         if (filters.department) params.append("wardId", filters.department);
         if (filters.status) params.append("status", filters.status);
-        // if (filters.ward) params.append("prabhagId", filters.ward);
+        if (filters.ward) params.append("prabhagId", filters.ward);
         const queryString = params.toString();
         const endpoint = `/rts-dashboard/getCommissionerSummary${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
         const response = await apiClient.get(endpoint);

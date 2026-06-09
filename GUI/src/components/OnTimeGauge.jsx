@@ -20,7 +20,7 @@ export default function OnTimeGauge({ filters }) {
       if (filters.status) params.append("status", filters.status);
       if (filters.type) params.append("serviceName", filters.type);
       if (filters.officer) params.append("officerName", filters.officer);
-      // if (filters.ward) params.append("prabhagId", filters.ward);
+      if (filters.ward) params.append("prabhagId", filters.ward);
       const queryString = params.toString();
       const endpoint = `/rts-dashboard/applicationStatusSummary${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
 

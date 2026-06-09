@@ -27,7 +27,7 @@ export default function AlertsPanel({ filters }) {
         };
         if (filters.fromDate) params.fromDate = filters.fromDate;
         if (filters.toDate) params.toDate = filters.toDate;
-        // if (filters.ward) params.prabhagId = filters.ward;
+        if (filters.ward) params.prabhagId = filters.ward;
         if (filters.status) params.status = filters.status;
         if (filters.type) params.serviceId = filters.type;
         if (filters.officer) params.username = filters.officer;

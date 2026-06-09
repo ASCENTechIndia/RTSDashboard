@@ -27,7 +27,7 @@ export default function MonthlyTrendChart({ filters }) {
       if (filters?.department) params.append("wardId", filters.department);
       if (filters.fromDate) params.append("fromDate", filters.fromDate);
         if (filters.toDate) params.append("toDate", filters.toDate);
-        // if (filters.ward) params.append("prabhagId", filters.ward);
+        if (filters.ward) params.append("prabhagId", filters.ward);
       const queryString = params.toString();
       const monthTrendUrl = `/rts-dashboard/monthwiseApplicationTrend${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
       const response = await apiClient.get(monthTrendUrl);

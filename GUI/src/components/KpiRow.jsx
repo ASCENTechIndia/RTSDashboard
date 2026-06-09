@@ -44,6 +44,7 @@ export default function KpiRow({ filters }) {
     if (filters.type) params.serviceId = filters.type;
     if (filters.officer) params.username = filters.officer;
     if (filters.department) params.wardId = filters.department;
+    if (filters.ward) params.prabhagId = filters.ward;
     return params;
   };
 

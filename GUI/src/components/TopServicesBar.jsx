@@ -55,7 +55,7 @@ export default function TopServicesBar({ filters }) {
     fetchServiceBarData();
   }, [filters]);
 
-  const chartHeight = serviceBarData.length * 35;
+  const chartHeight = Math.max(serviceBarData.length * 40, 220);
 
   return (
     <div className="card">
@@ -71,32 +71,40 @@ export default function TopServicesBar({ filters }) {
       >
         <div style={{ width: "100%", height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={serviceBarData}
-              layout="vertical"
-              margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-              barCategoryGap={12}
-            >
+           <BarChart
+  data={serviceBarData}
+  layout="vertical"
+  margin={{
+    top: 10,
+    right: 30,
+    left: 20,
+    bottom: 10,
+  }}
+  barCategoryGap={12}
+>
               <CartesianGrid horizontal={false} stroke="#eef0f4" />
               <XAxis type="number" tick={{ fontSize: 9, fill: "#6b7280" }} />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 9, fill: "#374151" }}
-                width={140}
-              />
+             <YAxis
+  type="category"
+  dataKey="name"
+  width={180} // Increase from 140
+  tick={{
+    fontSize: 11,
+    fill: "#374151",
+  }}
+/>
               <Tooltip />
               <Bar
-                dataKey="value"
-                radius={[0, 3, 3, 0]}
-                barSize={16}
-                fill="#2563eb"
-                label={{
-                  position: "right",
-                  fontSize: 9,
-                  fill: "#374151",
-                }}
-              />
+  dataKey="value"
+  fill="#2563eb"
+  barSize={20}
+  radius={[0, 4, 4, 0]}
+  label={{
+    position: "right",
+    fontSize: 11,
+    fill: "#374151",
+  }}
+/>
             </BarChart>
           </ResponsiveContainer>
         </div>

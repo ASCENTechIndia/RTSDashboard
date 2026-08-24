@@ -59,7 +59,7 @@ export default function CommissionerSummary({ filters }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">Commissioner Summary</h3>
+      <h3 className="card-title">आयुक्त सारांश</h3>
       <div className="summary-list">
         {summaryItems.map((item, idx) => (
           <div className="summary-item" key={idx}>

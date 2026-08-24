@@ -59,7 +59,7 @@ export default function DelayedServicesTable({ filters }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">Top Delayed Services (15+ दिवस विलंबित)</h3>
+      <h3 className="card-title">अति विलंबित सेवा (15+ दिवस विलंबित)</h3>
       <div>
         <DataTable
           headers={headers}

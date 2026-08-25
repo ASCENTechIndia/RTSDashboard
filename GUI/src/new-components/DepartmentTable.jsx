@@ -1,0 +1,194 @@
+import React, { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Landmark,
+  ClipboardCheck,
+  HeartPulse,
+  Droplets,
+  LayoutGrid,
+  BarChart2,
+  Handshake,
+  Road,
+  ShoppingCart,
+  Hotel,
+  HandHeart,
+  Flame,
+} from "lucide-react";
+import apiClient from "../services/apiClient";
+import { useLoader } from "../context/LoaderContext";
+
+const newIconMap = {
+  landmark: Landmark,
+  bookopen: BookOpen,
+  handshake: Handshake,
+  road: Road,
+  clipboardcheck: ClipboardCheck,
+  heartpulse: HeartPulse,
+  shoppingcart: ShoppingCart,
+  hotel: Hotel,
+  handheart: HandHeart,
+  flame: Flame,
+  droplets: Droplets,
+};
+
+export default function DepartmentTable({ filters }) {
+  const { setLoader } = useLoader();
+  const ULBID = import.meta.env.VITE_ULBID;
+  const [departmentWiseData, setDepartmentWiseData] = useState([]);
+
+  const fetchDepartmentWiseData = async () => {
+    setLoader(true);
+    try {
+      const params = new URLSearchParams();
+      if (ULBID) params.append("ulbId", ULBID);
+      if (filters.officer) params.append("username", filters.officer);
+      if (filters.type) params.append("serviceId", filters.type);
+      if (filters.fromDate) params.append("fromDate", filters.fromDate);
+      if (filters.toDate) params.append("toDate", filters.toDate);
+      if (filters.department) params.append("wardId", filters.department);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.ward) params.append("prabhagId", filters.ward);
+      const queryString = params.toString();
+      const endpoint = `/rts-dashboard/deptWiseApplications${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
+
+      const response = await apiClient.get(endpoint);
+      if (response.success && response.data.length > 0) {
+        const iconkeys = Object.keys(newIconMap);
+        const DeptRows = response.data.map((item, idx) => ({
+          dept: item?.VAR_DEPT_ENGNAME,
+          received: item?.TOTAL_APPLICATIONS,
+          disposed: item?.APPROVED_APPLICATIONS,
+          pending: item?.PENDING_APPLICATIONS,
+          ontime: item?.APPROVED_PERCENTAGE,
+          icon: iconkeys[idx % iconkeys.length],
+        }));
+
+        const totals = DeptRows.reduce(
+          (acc, row) => {
+            acc.received += Number(row.received || 0);
+            acc.disposed += Number(row.disposed || 0);
+            acc.pending += Number(row.pending || 0);
+            acc.ontimeSum += Number(row.ontime || 0);
+            return acc;
+          },
+          {
+            received: 0,
+            disposed: 0,
+            pending: 0,
+            ontimeSum: 0,
+          },
+        );
+
+        const totalRow = {
+          dept: "Total",
+          received: totals.received,
+          disposed: totals.disposed,
+          pending: totals.pending,
+          ontime: Number((totals.ontimeSum / DeptRows.length).toFixed(2)),
+          isTotal: true,
+        };
+        setDepartmentWiseData([...DeptRows, totalRow]);
+      } else {
+        setDepartmentWiseData([]);
+      }
+    } catch (error) {
+      setDepartmentWiseData([]);
+      console.error(error);
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartmentWiseData();
+  }, [filters]);
+
+  return (
+    <div className="card">
+      <h3 className="card-title">विभागनिहाय RTS कामगिरी</h3>
+      <div style={{ maxHeight: "270px", overflowY: "auto" }}>
+        <table
+          className="table"
+          style={{ borderCollapse: "collapse", overflowY: "auto" }}
+        >
+          <colgroup>
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "26%" }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>विभाग</th>
+              <th className="num" style={{ textAlign: "center" }}>
+                प्राप्त अर्ज
+              </th>
+              <th className="num" style={{ textAlign: "center" }}>
+                निकाली
+              </th>
+              <th className="num" style={{ textAlign: "center" }}>
+                प्रलंबित
+              </th>
+              <th className="num" style={{ textAlign: "center" }}>
+                निकाली (%)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {departmentWiseData.map((r, i) => {
+              const Icon = newIconMap[r.icon];
+              return (
+                <tr key={i} className={r.isTotal ? "total-row" : ""}>
+                  <td>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      {Icon && (
+                        <div>
+                          <Icon size={14} color="#161617" />
+                        </div>
+                      )}
+                      {r.dept}
+                    </div>
+                  </td>
+                  <td className="num">{r.received.toLocaleString("en-IN")}</td>
+                  <td className="num">{r.disposed.toLocaleString("en-IN")}</td>
+                  <td className="num">{r.pending.toLocaleString("en-IN")}</td>
+                  <td className="num">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <span style={{ minWidth: 36 }}>
+                        {r.ontime.toFixed(2)}%
+                      </span>
+                      <div className="bar-bg" style={{ flex: 1, maxWidth: 50 }}>
+                        <div
+                          className="bar-fill"
+                          style={{
+                            width: `${r.ontime}%`,
+                            background:
+                              r.ontime > 85
+                                ? "#16a34a"
+                                : r.ontime > 75
+                                  ? "#eab308"
+                                  : "#f59e0b",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

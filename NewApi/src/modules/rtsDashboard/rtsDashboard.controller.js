@@ -8,7 +8,8 @@ const {
   serviceTopServices,
   serviceServicewiseTopDelay,
   servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts,
-  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork
+  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork,serviceCommissionerSummaryCopy,
+  serviceServicewiseTopDelayCopy
 } = require('./rtsDashboard.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -253,6 +254,37 @@ async function getServicewiseTopDelay(req, res, next) {
   }
 }
 
+async function getServicewiseTopDelayCopy(req, res, next) {
+  try {
+     const filters = {
+      ulbId: req.query.ulbId ? parseInt(req.query.ulbId) : null,
+      username: req.query.username || null,
+      serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
+      wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      status: req.query.status || null, 
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
+    };
+    const rows = await serviceServicewiseTopDelayCopy(filters);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Service-wise Top Delay Report completed');
+    auditLog({
+      action: 'SERVICEWISE_TOP_DELAY',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: { filters, count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Service-wise Top Delay Report error');
+    return next(error);
+  }
+}
+
+
 async function getPrabhagwiseApplications(req, res, next) {
   try {
       const filters = {
@@ -297,6 +329,36 @@ async function getCommissionerSummary(req, res, next) {
 
     };
     const rows = await serviceCommissionerSummary(filters);
+    logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Commissioner summary completed');
+    auditLog({
+      action: 'COMMISSIONER_SUMMARY',
+      actor: req.user?.userId || 'system',
+      module: 'rtsDashboard',
+      status: 'SUCCESS',
+      details: {filters,  count: rows?.length || 0 },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Commissioner summary error');
+    return next(error);
+  }
+}
+
+async function getCommissionerSummaryCopy(req, res, next) {
+  try {
+     const filters = {
+      ulbId: req.query.ulbId ? parseInt(req.query.ulbId) : null,
+      username: req.query.username || null,
+      serviceId: req.query.serviceId ? parseInt(req.query.serviceId) : null,
+      wardId: req.query.wardId ? parseInt(req.query.wardId) : null,
+      fromDate: req.query.fromDate || null,
+      toDate: req.query.toDate || null,
+      status: req.query.status || null,
+            prabhagId: req.query.prabhagId ? parseInt(req.query.prabhagId) : null,
+
+    };
+    const rows = await serviceCommissionerSummaryCopy(filters);
     logApiSuccess(req, 200, { count: rows?.length || 0 }, 'Commissioner summary completed');
     auditLog({
       action: 'COMMISSIONER_SUMMARY',
@@ -421,5 +483,7 @@ module.exports = {
   getTopServices,
   getServicewiseTopDelay,
   getPrabhagwiseApplications, getCommissionerSummary, getAlerts,
-  getComplaintStatus, getRTSComplaints, getOfficerWork
+  getComplaintStatus, getRTSComplaints, getOfficerWork,
+  getCommissionerSummaryCopy,
+  getServicewiseTopDelayCopy
 };

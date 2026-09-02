@@ -723,6 +723,220 @@ async function repoServicewiseTopDelay(
   return result.rows || [];
 }
 
+async function repoServicewiseTopDelayCopy(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
+  fromDate,
+  toDate,
+  status,
+  prabhagId
+) {
+  const sql = `
+    SELECT
+      servnm AS servnm,
+
+      /*
+      |------------------------------------------------------------
+      | Applications Greater 15 / Pending Applications
+      |
+      | Same logic used for APPLICATIONS_GREATER15
+      |------------------------------------------------------------
+      |
+      | Total Resolved:
+      | status IN ('approved', 'Reject')
+      |
+      | Resolved Within Service Time:
+      | status IN ('approved', 'Reject')
+      | AND actual days <= num_service_maxdays
+      |
+      | Difference = applications outside service limit
+      |------------------------------------------------------------
+      */
+
+      ABS(
+        NVL(
+          SUM(
+            CASE
+              WHEN status IN ('approved', 'Reject')
+               AND NVL(TRUNC(recieptdate), SYSDATE)
+                   - TRUNC(app_date) <= num_service_maxdays
+              THEN 1
+              ELSE 0
+            END
+          ),
+          0
+        )
+        -
+        NVL(
+          SUM(
+            CASE
+              WHEN status IN ('approved', 'Reject')
+              THEN 1
+              ELSE 0
+            END
+          ),
+          0
+        )
+      ) AS pending_applications,
+
+      /*
+      |------------------------------------------------------------
+      | Percentage
+      |------------------------------------------------------------
+      */
+
+      ROUND(
+        ABS(
+          NVL(
+            SUM(
+              CASE
+                WHEN status IN ('approved', 'Reject')
+                 AND NVL(TRUNC(recieptdate), SYSDATE)
+                     - TRUNC(app_date) <= num_service_maxdays
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )
+          -
+          NVL(
+            SUM(
+              CASE
+                WHEN status IN ('approved', 'Reject')
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )
+        ) * 100
+        /
+        NULLIF(
+          NVL(
+            SUM(
+              CASE
+                WHEN status IN ('approved', 'Reject')
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ),
+          0
+        ),
+        2
+      ) AS percentage
+
+    FROM vw_prbhagwise_applilist
+
+    INNER JOIN aorts_service_def
+      ON serviceid = num_service_serviceid
+
+    WHERE 1 = 1
+  `;
+
+  let whereClauses = ``;
+  const binds = {};
+
+  if (ulbId != null) {
+    whereClauses += ` AND ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND officer_name = :username`;
+    binds.username = username;
+  }
+
+  if (prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND deptid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += `
+      AND TRUNC(app_date) >= TO_DATE(
+        :fromDate,
+        'DD-MON-YYYY'
+      )
+    `;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += `
+      AND TRUNC(app_date) <= TO_DATE(
+        :toDate,
+        'DD-MON-YYYY'
+      )
+    `;
+    binds.toDate = toDate;
+  }
+
+  if (status) {
+    whereClauses += `
+      AND UPPER(status) = UPPER(:status)
+    `;
+    binds.status = status;
+  }
+
+  const finalSql =
+    sql +
+    whereClauses +
+    `
+      GROUP BY servnm
+
+      HAVING ABS(
+        NVL(
+          SUM(
+            CASE
+              WHEN status IN ('approved', 'Reject')
+               AND NVL(TRUNC(recieptdate), SYSDATE)
+                   - TRUNC(app_date) <= num_service_maxdays
+              THEN 1
+              ELSE 0
+            END
+          ),
+          0
+        )
+        -
+        NVL(
+          SUM(
+            CASE
+              WHEN status IN ('approved', 'Reject')
+              THEN 1
+              ELSE 0
+            END
+          ),
+          0
+        )
+      ) > 0
+
+      ORDER BY percentage DESC
+    `;
+
+  const result =
+    await executeQuery(
+      finalSql,
+      binds
+    );
+
+  return result.rows || [];
+}
+
 async function repoPrabhagwiseApplications(
   ulbId,
   username,
@@ -934,6 +1148,166 @@ inner join aorts_service_def on serviceid = num_service_serviceid
   const finalSql = sql + whereClauses;
 
   const result = await executeQuery(finalSql, binds);
+  return result.rows || [];
+}
+
+async function repoCommissionerSummaryCopy(
+  ulbId,
+  username,
+  serviceId,
+  wardId,
+  fromDate,
+  toDate,
+  status,
+  prabhagId
+) {
+  const sql = `
+    SELECT
+      COUNT(appno) AS total_applications,
+
+      SUM(
+        CASE
+          WHEN status IN ('approved', 'Reject')
+          THEN 1
+          ELSE 0
+        END
+      ) AS approved_applications,
+
+      SUM(pending_applications) AS pending_applications,
+
+      /*
+      |------------------------------------------------------------
+      | Resolved Pending
+      | Same logic as repoApplicationStatusSummary.resolvedPendingSql
+      |------------------------------------------------------------
+      */
+       ABS(
+  NVL(
+    SUM(
+      CASE
+        WHEN status IN ('approved', 'Reject')
+         AND NVL(TRUNC(recieptdate), SYSDATE)
+             - TRUNC(app_date) <= num_service_maxdays
+        THEN 1
+        ELSE 0
+      END
+    ),
+    0
+  )
+  -
+  NVL(
+    SUM(
+      CASE
+        WHEN status IN ('approved', 'Reject')
+        THEN 1
+        ELSE 0
+      END
+    ),
+    0
+  )
+) AS applications_greater15,
+
+      ROUND(
+        NVL(
+          SUM(
+            CASE
+              WHEN status IN ('approved', 'Reject')
+               AND NVL(TRUNC(recieptdate), SYSDATE)
+                   - TRUNC(app_date) <= num_service_maxdays
+              THEN 1
+              ELSE 0
+            END
+          ),
+          0
+        ) * 100 /
+        NULLIF(
+          NVL(
+            SUM(
+              CASE
+                WHEN status IN ('approved', 'Reject')
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ),
+          0
+        ),
+        2
+      ) AS approved_percentage
+
+    FROM vw_prbhagwise_applilist
+
+    INNER JOIN aorts_service_def
+      ON serviceid = num_service_serviceid
+
+    WHERE 1 = 1
+  `;
+
+  let whereClauses = ``;
+  const binds = {};
+
+  if (ulbId != null) {
+    whereClauses += ` AND ulbid = :ulbId`;
+    binds.ulbId = ulbId;
+  }
+
+  if (username) {
+    whereClauses += ` AND officer_name = :username`;
+    binds.username = username;
+  }
+
+  if (prabhagId != null) {
+    whereClauses += ` AND wardid = :prabhagId`;
+    binds.prabhagId = prabhagId;
+  }
+
+  if (serviceId != null) {
+    whereClauses += ` AND serviceid = :serviceId`;
+    binds.serviceId = serviceId;
+  }
+
+  if (wardId != null) {
+    whereClauses += ` AND deptid = :wardId`;
+    binds.wardId = wardId;
+  }
+
+  if (fromDate) {
+    whereClauses += `
+      AND TRUNC(app_date) >= TO_DATE(
+        :fromDate,
+        'DD-MON-YYYY'
+      )
+    `;
+    binds.fromDate = fromDate;
+  }
+
+  if (toDate) {
+    whereClauses += `
+      AND TRUNC(app_date) <= TO_DATE(
+        :toDate,
+        'DD-MON-YYYY'
+      )
+    `;
+    binds.toDate = toDate;
+  }
+
+  if (status) {
+    whereClauses += `
+      AND UPPER(status) = UPPER(:status)
+    `;
+    binds.status = status;
+  }
+
+  const finalSql =
+    sql + whereClauses;
+
+  const result =
+    await executeQuery(
+      finalSql,
+      binds
+    );
+
   return result.rows || [];
 }
 
@@ -1235,4 +1609,6 @@ module.exports = {
   repoComplaintStatus,
   repoRTSComplaints,
   repoOfficerWork,
+  repoCommissionerSummaryCopy,
+  repoServicewiseTopDelayCopy
 };

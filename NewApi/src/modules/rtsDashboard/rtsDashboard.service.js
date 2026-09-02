@@ -7,7 +7,8 @@ const {
   repoDetailedApplicationStatus,
   repoTopServices,
   repoServicewiseTopDelay, repoPrabhagwiseApplications, repoCommissionerSummary, repoAlerts,
-  repoComplaintStatus, repoRTSComplaints, repoOfficerWork
+  repoComplaintStatus, repoRTSComplaints, repoOfficerWork ,  repoCommissionerSummaryCopy,
+  repoServicewiseTopDelayCopy
 } = require('./rtsDashboard.repository');
 
 async function serviceCounts(ulbId, filters = {}) {
@@ -113,6 +114,19 @@ async function serviceServicewiseTopDelay(filters = {}) {
   );
 }
 
+async function serviceServicewiseTopDelayCopy(filters = {}) {
+  return repoServicewiseTopDelayCopy(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
+    filters.fromDate,
+    filters.toDate,
+    filters.status,
+    filters.prabhagId
+  );
+}
+
 async function servicePrabhagwiseApplications(filters = {}) {
   return repoPrabhagwiseApplications(
     filters.ulbId,
@@ -128,6 +142,19 @@ async function servicePrabhagwiseApplications(filters = {}) {
 
 async function serviceCommissionerSummary(filters = {}) {
   return repoCommissionerSummary(
+    filters.ulbId,
+    filters.username,
+    filters.serviceId,
+    filters.wardId,
+    filters.fromDate,
+    filters.toDate,
+    filters.status,
+    filters.prabhagId
+  );
+}
+
+async function serviceCommissionerSummaryCopy(filters = {}) {
+  return repoCommissionerSummaryCopy(
     filters.ulbId,
     filters.username,
     filters.serviceId,
@@ -174,5 +201,6 @@ module.exports = {
   serviceTopServices,
   serviceServicewiseTopDelay,
   servicePrabhagwiseApplications, serviceCommissionerSummary, serviceAlerts,
-  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork
+  serviceComplaintStatus, serviceRTSComplaints, serviceOfficerWork,serviceCommissionerSummaryCopy,
+  serviceServicewiseTopDelayCopy
 };

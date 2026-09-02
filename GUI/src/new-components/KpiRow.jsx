@@ -58,7 +58,7 @@ export default function KpiRow({ filters }) {
         // `/topcounts/approvedApplications`,
         // `/topcounts/pendingApplications`,
         // `/topcounts/delayedApplications`,
-        `/rts-dashboard/getCommissionerSummary`, // this api will used for first four card + approved percentage
+        `/rts-dashboard/getCommissionerSummaryCopy`, // this api will used for first four card + approved percentage
         `/rts-dashboard/applicationStatusSummary`,
         `/topcounts/todaysApplications`,
         // `/topcounts/todaysApproved`,

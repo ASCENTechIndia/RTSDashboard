@@ -21,7 +21,7 @@ export default function DelayedServicesTable({ filters }) {
       if (filters.status) params.append("status", filters.status);
       if (filters.ward) params.append("prabhagId", filters.ward);
       const queryString = params.toString();
-      const endpoint = `/rts-dashboard/servicewiseTopDelay${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
+      const endpoint = `/rts-dashboard/servicewiseTopDelayCopy${queryString ? `?${queryString.replaceAll("+", " ")}` : ""}`;
       const response = await apiClient.get(endpoint);
       if (response.success && Array.isArray(response.data)) {
         const updatedData = response.data.map((item) => ({

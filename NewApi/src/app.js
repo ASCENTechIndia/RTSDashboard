@@ -22,7 +22,9 @@ function createApp() {
       origin: [
     'http://localhost:5173',
     'https://rtsdashboard.dhulecorporation.in',
-    'https://rtsdashboard.nagarkaryavalinewuat.com'
+    'https://rtsdashboard.nagarkaryavalinewuat.com',
+    'https://dashboard.mbmc.gov.in',
+    'http://dashboard.mbmc.gov.in'
   ],
       credentials: true,
     })

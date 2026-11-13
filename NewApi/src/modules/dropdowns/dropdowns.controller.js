@@ -1,4 +1,5 @@
-const {serviceStatusDropdown, serviceGetServices, serviceGetWards, serviceGetUsers, serviceGetWardsByUlbId} = require('./dropdowns.service');
+const { serviceStatusDropdown, serviceGetServices, serviceGetWards, serviceGetUsers, serviceGetWardsByUlbId } = require('./dropdowns.service');
+const { ALLOWED_ULB_IDS } = require('./dropdowns.repo');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -10,15 +11,27 @@ function requestMeta(req) {
   };
 }
 
+// Validate ulbId - only 1670, 1610, 1750 allowed
+function validateUlbId(ulbId) {
+  const id = Number(ulbId);
+  if (!ulbId || isNaN(id) || !ALLOWED_ULB_IDS.includes(id)) {
+    return null;
+  }
+  return id;
+}
+
 async function getServices(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 1670;
-    const deptId = req.query.deptId || null;
-    const data = await serviceGetServices(ulbId,deptId);
+    const ulbId = validateUlbId(req.query.ulbId || req.query.ulbid);
+    if (!ulbId) {
+      return res.status(400).json({ success: false, message: `Invalid ulbId. Allowed values: ${ALLOWED_ULB_IDS.join(', ')}` });
+    }
+    const deptId = req.query.deptId || req.query.deptid || null;
+    const data = await serviceGetServices(ulbId, deptId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Services Report completed');
     auditLog({
       action: 'GET_SERVICES',
-      actor: req.user?.userId ,
+      actor: req.user?.userId,
       module: 'dropdowns',
       status: 'SUCCESS',
       details: { ulbId },
@@ -40,12 +53,15 @@ async function getServices(req, res, next) {
 
 async function getWards(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 1670;
+    const ulbId = validateUlbId(req.query.ulbId || req.query.ulbid);
+    if (!ulbId) {
+      return res.status(400).json({ success: false, message: `Invalid ulbId. Allowed values: ${ALLOWED_ULB_IDS.join(', ')}` });
+    }
     const data = await serviceGetWards(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Wards Report completed');
     auditLog({
       action: 'GET_WARDS',
-      actor: req.user?.userId ,
+      actor: req.user?.userId,
       module: 'dropdowns',
       status: 'SUCCESS',
       details: { ulbId },
@@ -60,12 +76,15 @@ async function getWards(req, res, next) {
 
 async function getUsers(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 1670;
+    const ulbId = validateUlbId(req.query.ulbId || req.query.ulbid);
+    if (!ulbId) {
+      return res.status(400).json({ success: false, message: `Invalid ulbId. Allowed values: ${ALLOWED_ULB_IDS.join(', ')}` });
+    }
     const data = await serviceGetUsers(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Users Report completed');
     auditLog({
       action: 'GET_USERS',
-      actor: req.user?.userId ,
+      actor: req.user?.userId,
       module: 'dropdowns',
       status: 'SUCCESS',
       details: { ulbId },
@@ -80,12 +99,15 @@ async function getUsers(req, res, next) {
 
 async function getWardsByUlbId(req, res, next) {
   try {
-    const ulbId = req.query.ulbid || 1670;
+    const ulbId = validateUlbId(req.query.ulbId || req.query.ulbid);
+    if (!ulbId) {
+      return res.status(400).json({ success: false, message: `Invalid ulbId. Allowed values: ${ALLOWED_ULB_IDS.join(', ')}` });
+    }
     const data = await serviceGetWardsByUlbId(ulbId);
     logApiSuccess(req, 200, { count: data?.length || 0 }, 'Wards By ULB ID Report completed');
     auditLog({
       action: 'GET_WARDS_BY_ULB_ID',
-      actor: req.user?.userId ,
+      actor: req.user?.userId,
       module: 'dropdowns',
       status: 'SUCCESS',
       details: { ulbId },
